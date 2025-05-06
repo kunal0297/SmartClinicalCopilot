@@ -2,35 +2,42 @@
 import React from "react";
 import { Card, CardContent, Typography, Chip } from "@mui/material";
 
-interface AlertCardProps {
-  alert: {
-    rule_id: string;
-    message: string;
-    severity?: string;
-  };
+type Severity = "critical" | "warning" | "info" | undefined;
+
+interface Alert {
+  rule_id: string;
+  message: string;
+  severity?: Severity;
 }
 
-const severityColor = (severity?: string) => {
+interface AlertCardProps {
+  alert: Alert;
+}
+
+const getSeverityColor = (severity: Severity = "info") => {
   switch (severity) {
     case "critical":
       return "error";
     case "warning":
       return "warning";
-    case "info":
     default:
       return "info";
   }
 };
 
 const AlertCard: React.FC<AlertCardProps> = ({ alert }) => {
+  const { rule_id, message, severity = "info" } = alert;
+
   return (
-    <Card sx={{ marginBottom: 2 }}>
+    <Card sx={{ mb: 2 }}>
       <CardContent>
-        <Typography variant="h6">{alert.rule_id}</Typography>
-        <Typography variant="body1" sx={{ marginBottom: 1 }}>
-          {alert.message}
+        <Typography variant="h6" gutterBottom>
+          {rule_id}
         </Typography>
-        <Chip label={alert.severity || "info"} color={severityColor(alert.severity)} />
+        <Typography variant="body1" sx={{ mb: 1 }}>
+          {message}
+        </Typography>
+        <Chip label={severity} color={getSeverityColor(severity)} />
       </CardContent>
     </Card>
   );
