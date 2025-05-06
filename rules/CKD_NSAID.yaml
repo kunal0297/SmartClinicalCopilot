@@ -1,0 +1,12 @@
+# rules/CKD_NSAID.yaml
+
+rules:
+  - id: "CKD_NSAID"
+    text: "Avoid NSAIDs if eGFR < 30."
+    conditions:
+      - type: "eGFR"
+        operator: "<"
+        value: 30
+    actions:
+      - type: "alert"
+        message: "Patient should avoid NSAIDs due to low eGFR."
