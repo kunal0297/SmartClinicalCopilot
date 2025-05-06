@@ -15,4 +15,8 @@ setup(
     version="1.0",
     description="High-performance C-based Trie for clinical rule matching",
     ext_modules=[module],
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "Operating System :: OS Independent"
+    ]
 )
