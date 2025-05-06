@@ -1,61 +1,47 @@
-# backend/rule_loader.py
-
 import yaml
 import json
-from typing import List, Dict, Union
+from typing import List, Dict, Any
 import os
 
 class RuleLoader:
     def __init__(self, rules_path: str = "rules"):
         self.rules_path = rules_path
 
-    def load_rules(self) -> List[str]:
+    def load_rules(self) -> List[Dict[str, Any]]:
         """
         Load and parse all rule files (YAML or JSON) from the rules directory.
-        Returns a list of rule strings ready for trie insertion.
+        Returns a list of rule dictionaries.
         """
-        rule_texts = []
-
         if not os.path.exists(self.rules_path):
             raise FileNotFoundError(f"Rules directory '{self.rules_path}' does not exist.")
 
+        rule_list = []
         for filename in os.listdir(self.rules_path):
             filepath = os.path.join(self.rules_path, filename)
-            if filename.endswith(".yaml") or filename.endswith(".yml"):
-                with open(filepath, "r") as f:
-                    rules = yaml.safe_load(f)
-                    rule_texts.extend(self._extract_rule_texts(rules))
-            elif filename.endswith(".json"):
-                with open(filepath, "r") as f:
-                    rules = json.load(f)
-                    rule_texts.extend(self._extract_rule_texts(rules))
-            else:
-                # Unsupported file format
-                continue
-        return rule_texts
+            try:
+                if filename.endswith((".yaml", ".yml")):
+                    with open(filepath, "r") as f:
+                        data = yaml.safe_load(f)
+                elif filename.endswith(".json"):
+                    with open(filepath, "r") as f:
+                        data = json.load(f)
+                else:
+                    # Unsupported file format
+                    continue
 
-    def _extract_rule_texts(self, data: Union[Dict, List]) -> List[str]:
-        """
-        Extract rule text content from loaded data.
-        Adjust this method depending on your rule file structure.
-        """
-        rules = []
-        if isinstance(data, dict):
-            # Example: rules under 'rules' key
-            rule_entries = data.get("rules", [])
-            for entry in rule_entries:
-                if isinstance(entry, dict) and "text" in entry:
-                    rules.append(entry["text"])
-                elif isinstance(entry, str):
-                    rules.append(entry)
-        elif isinstance(data, list):
-            for entry in data:
-                if isinstance(entry, dict) and "text" in entry:
-                    rules.append(entry["text"])
-                elif isinstance(entry, str):
-                    rules.append(entry)
-        return rules
+                # Extract rules from data
+                if isinstance(data, dict):
+                    rules = data.get("rules")
+                    if isinstance(rules, list):
+                        rule_list.extend(rules)
+                elif isinstance(data, list):
+                    rule_list.extend(data)
+            except Exception:
+                # Skip file if an error occurs
+                continue
+
+        return rule_list
 
 # Example usage:
 # loader = RuleLoader(rules_path="rules")
-# rule_texts = loader.load_rules()
+# rules = loader.load_rules()
