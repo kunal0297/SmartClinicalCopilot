@@ -1,0 +1,12 @@
+# rules/QT_Prolongation.yaml
+
+rules:
+  - id: "QT_Prolongation"
+    text: "Monitor for QT prolongation in patients taking certain medications."
+    conditions:
+      - type: "QT_interval"
+        operator: ">"
+        value: 450
+    actions:
+      - type: "alert"
+        message: "Patient is at risk for QT prolongation. Monitor QT interval."
