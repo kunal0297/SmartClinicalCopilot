@@ -2,11 +2,36 @@
 
 rules:
   - id: "QT_Prolongation"
-    text: "Monitor for QT prolongation in patients taking certain medications."
+    text: "Monitor for QT prolongation"
+    category: "lab"
+    severity: "warning"
+    confidence: 0.85
     conditions:
       - type: "QT_interval"
         operator: ">"
         value: 450
+        unit: "ms"
+        source: "Observation"
+      - type: "medication"
+        operator: "in"
+        value: ["amiodarone", "sotalol", "dofetilide"]
+        source: "MedicationRequest"
     actions:
       - type: "alert"
-        message: "Patient is at risk for QT prolongation. Monitor QT interval."
+        message: "Patient is at risk for QT prolongation"
+        severity: "warning"
+      - type: "suggestion"
+        message: "Consider ECG monitoring and review medications"
+        references:
+          - type: "guideline"
+            id: "ACC_2020"
+            text: "ACC/AHA/HRS 2020 Guidelines for Management of Patients With Ventricular Arrhythmias"
+      - type: "explanation"
+        template: "Patient has prolonged QT interval ({qt_interval}ms) and is taking {medication}, which can further prolong QT. According to {guideline}, this combination requires careful monitoring."
+        variables:
+          - name: "qt_interval"
+            source: "condition.QT_interval"
+          - name: "medication"
+            source: "condition.medication"
+          - name: "guideline"
+            source: "action.references[0].text"

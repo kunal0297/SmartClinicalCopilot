@@ -1,88 +1,114 @@
-import httpx
-import json
-from fastapi import HTTPException
-from models import Patient
-from typing import Optional
+import os
+import logging
+from typing import Dict, Any, Optional
+from dotenv import load_dotenv
+import openai
+from tenacity import retry, stop_after_attempt, wait_exponential
 
-class FHIRClient:
-    def __init__(self, base_url: str = "http://localhost:5001/fhir/r4"):
-        self.base_url = base_url
+# Load environment variables
+load_dotenv()
 
-    async def get_patient(self, patient_id: str) -> Optional[Patient]:
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class LLMExplainer:
+    def __init__(self):
+        self.api_key = os.getenv("OPENAI_API_KEY")
+        if not self.api_key:
+            logger.warning("No OpenAI API key found. Explanations will be template-based only.")
+        else:
+            openai.api_key = self.api_key
+
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
+    async def explain(self, rule_id: str, patient_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate an explanation for a triggered rule using LLM."""
+        try:
+            if not self.api_key:
+                return self._generate_template_explanation(rule_id, patient_data)
+
+            # Prepare the prompt
+            prompt = self._create_prompt(rule_id, patient_data)
+            
+            # Call OpenAI API
+            response = await openai.ChatCompletion.acreate(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are a clinical decision support system that provides clear, evidence-based explanations for medical alerts."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=500
+            )
+
+            explanation = response.choices[0].message.content
+
+            return {
+                "rule_id": rule_id,
+                "explanation": explanation,
+                "confidence": 0.9,
+                "references": self._get_references(rule_id)
+            }
+
+        except Exception as e:
+            logger.error(f"Error generating explanation: {str(e)}")
+            return self._generate_template_explanation(rule_id, patient_data)
+
+    def _create_prompt(self, rule_id: str, patient_data: Dict[str, Any]) -> str:
+        """Create a prompt for the LLM based on the rule and patient data."""
+        return f"""
+        Generate a clear, evidence-based explanation for why this clinical alert was triggered.
+        
+        Rule ID: {rule_id}
+        Patient Data: {patient_data}
+        
+        Please provide:
+        1. A clear explanation of why this alert was triggered
+        2. The clinical significance
+        3. Evidence-based recommendations
+        4. Relevant guidelines or references
+        
+        Format the response in a way that would be helpful for a clinician.
         """
-        Retrieve a patient by ID from the FHIR server.
 
-        Args:
-            patient_id (str): The ID of the patient to retrieve.
+    def _generate_template_explanation(self, rule_id: str, patient_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate a template-based explanation when LLM is not available."""
+        templates = {
+            "CKD_NSAID": {
+                "explanation": "This patient has advanced chronic kidney disease and is prescribed an NSAID. According to KDIGO guidelines, NSAIDs should be avoided in this population due to the risk of renal function deterioration.",
+                "confidence": 0.7,
+                "references": ["KDIGO 2021 Clinical Practice Guideline"]
+            },
+            "QT_Prolongation": {
+                "explanation": "This patient is at risk for QT prolongation due to medication interactions. Consider alternative medications or close monitoring.",
+                "confidence": 0.7,
+                "references": ["AHA/ACC Guidelines"]
+            }
+        }
+        
+        return templates.get(rule_id, {
+            "explanation": "Alert triggered based on clinical rules.",
+            "confidence": 0.5,
+            "references": []
+        })
 
-        Returns:
-            Optional[Patient]: The patient data if found, otherwise None.
-
-        Raises:
-            HTTPException: For HTTP errors.
-        """
-        url = f"{self.base_url}/Patient/{patient_id}"
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
-
-            if response.status_code == 200:
-                data = response.json()
-                return Patient(**data)
-            elif response.status_code == 404:
-                return None
-            else:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=f"Error fetching patient: {response.text}"
-                )
-
-    async def search_patients(self, name: str) -> List[Patient]:
-        """
-        Search for patients by name.
-
-        Args:
-            name (str): The name of the patient to search for.
-
-        Returns:
-            List[Patient]: A list of patients matching the search criteria.
-        """
-        url = f"{self.base_url}/Patient?name={name}"
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
-
-            if response.status_code == 200:
-                data = response.json()
-                return [Patient(**patient) for patient in data.get("entry", [])]
-            else:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=f"Error searching for patients: {response.text}"
-                )
-
-    async def get_patient_history(self, patient_id: str) -> List[Patient]:
-        """
-        Retrieve the history of a patient's records.
-
-        Args:
-            patient_id (str): The ID of the patient.
-
-        Returns:
-            List[Patient]: A list of historical patient records.
-        """
-        url = f"{self.base_url}/Patient/{patient_id}/_history"
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
-
-            if response.status_code == 200:
-                data = response.json()
-                return [Patient(**entry["resource"]) for entry in data.get("entry", [])]
-            else:
-                raise HTTPException(
-                    status_code=response.status_code,
-                    detail=f"Error fetching patient history: {response.text}"
-                )
+    def _get_references(self, rule_id: str) -> list:
+        """Get relevant clinical references for the rule."""
+        references = {
+            "CKD_NSAID": [
+                "KDIGO 2021 Clinical Practice Guideline",
+                "UpToDate: NSAIDs in CKD",
+                "FDA Safety Communication: NSAIDs and Kidney Disease"
+            ],
+            "QT_Prolongation": [
+                "AHA/ACC Guidelines for QT Prolongation",
+                "CredibleMeds: QT Drug Lists",
+                "FDA Drug Safety Communication: QT Prolongation"
+            ]
+        }
+        return references.get(rule_id, [])
 
 # Example usage:
-# fhir_client = FHIRClient()
-# patient = await fhir_client.get_patient("12345")
-# print(patient)
+# explainer = LLMExplainer()
+# explanation = await explainer.explain("rule123", patient)
+# print(explanation)

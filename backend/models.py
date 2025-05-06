@@ -1,45 +1,113 @@
 from pydantic import BaseModel, validator, Field
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from datetime import datetime
+from enum import Enum
 
-class HumanName(BaseModel):
-    given: Optional[List[str]] = Field(None, description="Given names (e.g., first, middle names)")
-    family: Optional[str] = Field(None, description="Family name (e.g., last name)")
-    use: Optional[str] = Field(None, description="Use of the name (e.g., 'official', 'nickname')")
-    text: Optional[str] = Field(None, description="Combined text representation of the name")
+class SeverityLevel(str, Enum):
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
 
-    class Config:
-        extra = "allow"
-        arbitrary_types_allowed = True
+class Name(BaseModel):
+    text: str
+
+class Observation(BaseModel):
+    code: str
+    system: str
+    display: str
+    value: float
+    unit: str
+    date: Optional[datetime] = None
+
+class Medication(BaseModel):
+    code: str
+    system: str
+    display: str
+    status: str
+    intent: str
+    date: Optional[datetime] = None
+
+class Condition(BaseModel):
+    code: str
+    system: str
+    display: str
+    status: str
+    onset: Optional[datetime] = None
+
+class PatientConditions(BaseModel):
+    observations: List[Observation] = []
+    medications: List[Medication] = []
+    conditions: List[Condition] = []
 
 class Patient(BaseModel):
-    id: str = Field(..., description="Patient ID")
-    name: Optional[List[HumanName]] = Field(None, description="Patient names")
-    gender: Optional[str] = Field(None, description="Patient gender")
-    birthDate: Optional[str] = Field(None, description="Patient date of birth in YYYY-MM-DD format")
-    address: Optional[List[dict]] = Field(None, description="Patient addresses")
-    maritalStatus: Optional[str] = Field(None, description="Patient marital status")
-    eGFR: Optional[float] = Field(None, description="Estimated Glomerular Filtration Rate", gt=0, lt=200)
-    QT_interval: Optional[float] = Field(None, description="QT Interval", gt=0, lt=1000)
-
-    @validator("birthDate")
-    def validate_birth_date(cls, value):
-        if value and not isinstance(value, str):
-            raise ValueError("Birth date must be a string")
-        return value
+    id: str
+    name: List[Dict[str, str]]
+    gender: Optional[str] = None
+    birthDate: Optional[datetime] = None
+    conditions: PatientConditions
 
     class Config:
-        extra = "allow"
         validate_assignment = True
 
 class Alert(BaseModel):
-    rule_id: str = Field(..., description="ID of the triggered clinical rule")
-    message: str = Field(..., description="Alert message describing the issue")
-    severity: Optional[str] = Field("info", description="Severity level: info, warning, critical")
-    triggered_by: Optional[List[str]] = Field(None, description="Fields or values that triggered the alert")
+    rule_id: str
+    message: str
+    severity: SeverityLevel
+    triggered_by: List[str]
+    explanation: Optional[RuleExplanation] = None
+    feedback_stats: Optional[FeedbackStats] = None
+
+class Rule(BaseModel):
+    id: str
+    text: str
+    category: str
+    severity: SeverityLevel
+    confidence: float
+    conditions: List[RuleCondition]
+    actions: List[RuleAction]
 
     class Config:
-        extra = "allow"
-        arbitrary_types_allowed = True
+        validate_assignment = True
+
+class RuleCondition(BaseModel):
+    type: str
+    operator: str
+    value: Any
+    unit: Optional[str] = None
+    source: str
+
+    @validator('operator')
+    def validate_operator(cls, v):
+        valid_operators = ['<', '>', '<=', '>=', '=', '==', '!=']
+        if v not in valid_operators:
+            raise ValueError(f'Invalid operator. Must be one of {valid_operators}')
+        return v
+
+class RuleAction(BaseModel):
+    type: str
+    message: str
+    severity: Optional[SeverityLevel] = None
+    references: Optional[List[Dict[str, str]]] = None
+
+class RuleExplanation(BaseModel):
+    rule_id: str
+    explanation: str
+    confidence: float
+    references: List[str]
+
+class FeedbackStats(BaseModel):
+    rule_id: str
+    total_feedback: int
+    helpful_count: int
+    helpful_percentage: float
+
+class Feedback(BaseModel):
+    alert_id: str
+    rule_id: str
+    helpful: bool
+    comments: Optional[str] = None
+    timestamp: Optional[datetime] = Field(default_factory=datetime.now)
 
 # Example usage:
 # patient = Patient(id="12345", name=[HumanName(given=["John", "Doe"], family="Smith")])

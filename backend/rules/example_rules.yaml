@@ -1,0 +1,22 @@
+rules:
+  - id: "rule001"
+    text: "Check for abnormal eGFR"
+    conditions:
+      - type: "eGFR"
+        operator: "<"
+        value: 60
+    actions:
+      - type: "alert"
+        message: "Patient has reduced kidney function (eGFR < 60)"
+        severity: "warning"
+
+  - id: "rule002"
+    text: "Check for prolonged QT interval"
+    conditions:
+      - type: "QT_interval"
+        operator: ">"
+        value: 450
+    actions:
+      - type: "alert"
+        message: "Patient has prolonged QT interval (> 450ms)"
+        severity: "warning" 

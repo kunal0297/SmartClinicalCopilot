@@ -1,75 +1,107 @@
-import yaml
-import json
 import os
-from typing import List, Dict, Any
+import yaml
 import logging
+from typing import List, Dict, Any
+from pydantic import BaseModel, Field, validator
+from enum import Enum
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+class SeverityLevel(str, Enum):
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    CRITICAL = "critical"
+
+class Condition(BaseModel):
+    type: str
+    operator: str
+    value: Any
+    unit: str = None
+    source: str = None
+
+    @validator('operator')
+    def validate_operator(cls, v):
+        valid_operators = ['<', '>', '<=', '>=', '=', '==', '!=']
+        if v not in valid_operators:
+            raise ValueError(f'Invalid operator. Must be one of {valid_operators}')
+        return v
+
+class Action(BaseModel):
+    type: str
+    message: str
+    severity: SeverityLevel = SeverityLevel.INFO
+    explanation: Dict[str, Any] = None
+
+class Rule(BaseModel):
+    id: str
+    text: str
+    category: str = None
+    severity: SeverityLevel = SeverityLevel.INFO
+    confidence: float = Field(ge=0.0, le=1.0, default=1.0)
+    conditions: List[Condition]
+    actions: List[Action]
+
 class RuleLoader:
-    def __init__(self, rules_path: str = "rules"):
-        self.rules_path = rules_path
-        self.supported_formats = {".yaml", ".yml", ".json"}
+    def __init__(self, rules_dir: str = None):
+        self.rules_dir = rules_dir or os.path.join(os.path.dirname(__file__), "rules")
 
     def load_rules(self) -> List[Dict[str, Any]]:
-        """
-        Load and parse all rule files (YAML or JSON) from the rules directory.
-        Returns a list of rule dictionaries.
-        """
-        if not os.path.exists(self.rules_path):
-            raise FileNotFoundError(f"Rules directory '{self.rules_path}' does not exist.")
+        """Load and validate all rules from the rules directory."""
+        rules = []
+        try:
+            for filename in os.listdir(self.rules_dir):
+                if filename.endswith(".yaml"):
+                    rule_path = os.path.join(self.rules_dir, filename)
+                    with open(rule_path, "r") as f:
+                        rule_data = yaml.safe_load(f)
+                        try:
+                            # Validate rule structure
+                            rule = Rule(**rule_data)
+                            rules.append(rule.dict())
+                            logger.info(f"Successfully loaded rule: {rule.id}")
+                        except Exception as e:
+                            logger.error(f"Error validating rule in {filename}: {str(e)}")
+                            continue
+        except Exception as e:
+            logger.error(f"Error loading rules: {str(e)}")
+            return []
 
-        rule_list = []
-        for filename in os.listdir(self.rules_path):
-            filepath = os.path.join(self.rules_path, filename)
-            file_ext = os.path.splitext(filename)[1].lower()
+        return rules
 
-            if file_ext not in self.supported_formats:
-                logger.warning(f"Skipping unsupported file format: {filename}")
-                continue
-
-            try:
-                if file_ext in {".yaml", ".yml"}:
-                    with open(filepath, "r") as f:
-                        data = yaml.safe_load(f)
-                elif file_ext == ".json":
-                    with open(filepath, "r") as f:
-                        data = json.load(f)
-
-                if isinstance(data, dict):
-                    rules = data.get("rules")
-                    if isinstance(rules, list):
-                        rule_list.extend(rules)
-                elif isinstance(data, list):
-                    rule_list.extend(data)
-                else:
-                    logger.warning(f"Unexpected data format in file: {filename}")
-            except Exception as e:
-                logger.error(f"Error loading rules from file {filename}: {str(e)}")
-                continue
-
-        logger.info(f"Successfully loaded {len(rule_list)} rules")
-        return rule_list
-
-    def validate_rule(self, rule: Dict[str, Any]) -> bool:
-        """
-        Validate a single rule dictionary.
-        """
-        required_fields = {"id", "text"}
-        if not isinstance(rule, dict) or not required_fields.issubset(rule.keys()):
+    def validate_rule(self, rule_data: Dict[str, Any]) -> bool:
+        """Validate a single rule's structure."""
+        try:
+            Rule(**rule_data)
+            return True
+        except Exception as e:
+            logger.error(f"Error validating rule: {str(e)}")
             return False
-        return True
 
-    def filter_valid_rules(self, rules: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """
-        Filter and return only valid rules from the list.
-        """
-        return [rule for rule in rules if self.validate_rule(rule)]
+    def save_rule(self, rule_data: Dict[str, Any]) -> bool:
+        """Save a rule to a YAML file."""
+        try:
+            # Validate rule structure
+            if not self.validate_rule(rule_data):
+                return False
+
+            # Create filename from rule ID
+            filename = f"{rule_data['id']}.yaml"
+            filepath = os.path.join(self.rules_dir, filename)
+
+            # Save rule to file
+            with open(filepath, "w") as f:
+                yaml.dump(rule_data, f, default_flow_style=False)
+            
+            logger.info(f"Successfully saved rule: {rule_data['id']}")
+            return True
+        except Exception as e:
+            logger.error(f"Error saving rule: {str(e)}")
+            return False
 
 # Example usage:
-# loader = RuleLoader(rules_path="rules")
-# raw_rules = loader.load_rules()
-# valid_rules = loader.filter_valid_rules(raw_rules)
-# print(valid_rules)
+# rule_loader = RuleLoader()
+# rules = rule_loader.load_rules()
+# print(rules)

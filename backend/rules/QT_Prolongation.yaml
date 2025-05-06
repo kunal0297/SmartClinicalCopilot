@@ -1,0 +1,29 @@
+id: QT_Prolongation
+text: Monitor for QT prolongation
+category: lab
+severity: warning
+confidence: 0.85
+conditions:
+  - type: QT_interval
+    operator: ">"
+    value: 450
+    unit: "ms"
+    source: "conditions.observations"
+  - type: QT_prolonging_medication
+    operator: "="
+    value: true
+    source: "conditions.medications"
+actions:
+  - type: alert
+    message: "Patient has prolonged QT interval and is taking QT-prolonging medication"
+    severity: warning
+    explanation:
+      template: "Patient has a QT interval of {qt_interval} ms and is taking {medication}. This combination increases the risk of Torsades de Pointes. Consider ECG monitoring and medication review."
+      variables:
+        - name: qt_interval
+          source: "conditions.observations.0.value"
+        - name: medication
+          source: "conditions.medications.0.display"
+      guidelines:
+        - "American Heart Association Guidelines for QT Prolongation"
+        - "CredibleMeds QT Drug Lists" 

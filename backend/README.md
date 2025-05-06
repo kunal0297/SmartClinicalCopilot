@@ -1,44 +1,174 @@
-# Backend - FHIR Rules & LLM Services
+# SmartClinicalCopilot Backend 🚀
 
-## Overview
+The backend service for SmartClinicalCopilot, providing FHIR integration, rule matching, and LLM-powered explanations.
 
-This backend provides:
+## 🏗️ Architecture
 
-- A FastAPI application (`app.py`) that handles clinical rule matching and explanations.
-- A C-based trie engine (via Python wrapper) for efficient rule matching.
-- Integration with OpenAI’s GPT models for clinical rule explanation.
-- A FHIR client to pull patient data from IRIS.
-- Rule loading utilities for ingesting YAML/JSON rule files.
+### Core Components
 
-## Setup
+1. **FHIR Client (`fhir_client.py`)**
+   - Asynchronous FHIR data retrieval
+   - Caching system with TTL
+   - Error handling and retries
+   - Data normalization
 
-1. **Install Dependencies**
+2. **Trie Engine (`trie_engine.py`)**
+   - Fast rule matching using Trie data structure
+   - Support for complex conditions
+   - Real-time rule validation
+   - Pattern matching optimization
 
-   pip install -r requirements.txt
-Build C Extension
+3. **LLM Explainer (`llm_explainer.py`)**
+   - OpenAI GPT-4 integration
+   - Template-based fallback system
+   - Evidence-based explanations
+   - Clinical guideline references
 
-Assuming the C source files and wrapper are in place:
+4. **Feedback System (`feedback.py`)**
+   - JSON-based feedback storage
+   - Rule-specific statistics
+   - Historical feedback analysis
+   - Performance metrics
 
-python setup.py build
-python setup.py install
-Environment Variables
+### API Endpoints
 
-Set OPENAI_API_KEY to your OpenAI API key.
-Configure other necessary environment variables as needed.
-Run the FastAPI App
+```python
+# Patient Data
+GET /patients/{id}              # Get patient data
+POST /match-rules              # Match clinical rules
+POST /suggest-rules            # Get rule suggestions
 
+# Feedback
+POST /feedback                 # Submit alert feedback
+GET /feedback/{rule_id}        # Get rule feedback stats
+GET /feedback/recent           # Get recent feedback
 
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
-Usage
-Use the /match-rules endpoint to find triggered alerts given a patient.
-Use the /explain-rule endpoint to get human-readable explanations.
-Use the /patients/{id} endpoint to fetch patient data from IRIS.
-Adding Rules
-Add your clinical rules as .yaml or .json files under the rules directory.
-The rule_loader module will parse and load them into the trie.
-Extending
-Extend models in models.py to accommodate more FHIR resources or alert types.
-Enhance LLM prompt engineering inside llm_explainer.py.
-This backend is designed to be modular and efficient for clinical rule-based decision support with AI explanations.
+# System
+GET /health                    # Health check
+GET /health/detailed          # Detailed health status
+GET /metrics                   # Prometheus metrics
+```
 
-If you want, I can also prepare `setup.py` for building the C extension and other integration configurations. Just ask!
+## 🛠️ Technical Stack
+
+- **Framework**: FastAPI
+- **Database**: InterSystems IRIS for Health
+- **AI/ML**: OpenAI GPT-4
+- **Monitoring**: Prometheus
+- **Caching**: TTLCache
+- **Authentication**: Basic Auth
+
+## 📦 Dependencies
+
+```txt
+fastapi==0.68.0
+uvicorn==0.15.0
+pydantic==1.8.2
+python-dotenv==0.19.0
+aiohttp==3.8.1
+fhirclient==3.2.0
+openai==0.27.0
+prometheus-client==0.11.0
+cachetools==4.2.4
+tenacity==8.0.1
+```
+
+## 🔧 Setup
+
+1. Create virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+```
+
+2. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+3. Configure environment:
+```bash
+# .env
+FHIR_SERVER_URL=http://localhost:52773/csp/healthshare/fhir/r4
+IRIS_USERNAME=your_username
+IRIS_PASSWORD=your_password
+OPENAI_API_KEY=your_openai_key
+```
+
+4. Start server:
+```bash
+python app.py
+```
+
+## 📊 Performance Optimization
+
+1. **Caching Strategy**
+   - Patient data: 5-minute TTL
+   - Rule cache: In-memory
+   - LLM responses: Template-based fallback
+
+2. **Concurrency**
+   - Async/await for I/O operations
+   - Connection pooling
+   - Rate limiting
+
+3. **Error Handling**
+   - Retry mechanism
+   - Circuit breaker pattern
+   - Graceful degradation
+
+## 🔍 Monitoring
+
+- Prometheus metrics
+- Health check endpoints
+- Detailed logging
+- Performance tracking
+
+## 🧪 Testing
+
+```bash
+# Run tests
+pytest
+
+# Run with coverage
+pytest --cov=.
+
+# Run specific test
+pytest tests/test_fhir_client.py
+```
+
+## 📈 Performance Metrics
+
+- Rule matching: < 100ms
+- FHIR data retrieval: < 500ms
+- LLM explanation: < 2s
+- Overall response: < 3s
+
+## 🔐 Security
+
+- IRIS authentication
+- CORS protection
+- Input validation
+- Rate limiting
+- Error handling
+
+## 🐛 Troubleshooting
+
+1. **Connection Issues**
+   - Check IRIS server status
+   - Verify credentials
+   - Check network connectivity
+
+2. **Performance Issues**
+   - Monitor cache hit rates
+   - Check response times
+   - Review error logs
+
+3. **LLM Issues**
+   - Verify API key
+   - Check rate limits
+   - Review prompt templates
+
+## 📝 License
+
+This project is licensed under the MIT License.

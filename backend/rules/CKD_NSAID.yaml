@@ -1,0 +1,29 @@
+id: CKD_NSAID
+text: Avoid NSAIDs in advanced CKD
+category: medication
+severity: error
+confidence: 0.95
+conditions:
+  - type: eGFR
+    operator: "<"
+    value: 30
+    unit: "mL/min/1.73m²"
+    source: "conditions.observations"
+  - type: NSAID
+    operator: "="
+    value: true
+    source: "conditions.medications"
+actions:
+  - type: alert
+    message: "Patient with eGFR < 30 mL/min/1.73m² should avoid NSAIDs"
+    severity: error
+    explanation:
+      template: "Patient has advanced CKD (eGFR {eGFR} mL/min/1.73m²) and is taking {medication}. NSAIDs can worsen kidney function in patients with CKD. Consider alternative pain management options."
+      variables:
+        - name: eGFR
+          source: "conditions.observations.0.value"
+        - name: medication
+          source: "conditions.medications.0.display"
+      guidelines:
+        - "KDIGO 2012 Clinical Practice Guideline for the Evaluation and Management of Chronic Kidney Disease"
+        - "American College of Rheumatology Guidelines for NSAID Use in CKD" 

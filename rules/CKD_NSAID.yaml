@@ -2,11 +2,36 @@
 
 rules:
   - id: "CKD_NSAID"
-    text: "Avoid NSAIDs if eGFR < 30."
+    text: "Avoid NSAIDs in advanced CKD"
+    category: "medication"
+    severity: "error"
+    confidence: 0.95
     conditions:
       - type: "eGFR"
         operator: "<"
         value: 30
+        unit: "mL/min/1.73m²"
+        source: "Observation"
+      - type: "medication"
+        operator: "in"
+        value: ["ibuprofen", "naproxen", "diclofenac"]
+        source: "MedicationRequest"
     actions:
       - type: "alert"
-        message: "Patient should avoid NSAIDs due to low eGFR."
+        message: "Patient should avoid NSAIDs due to advanced CKD"
+        severity: "error"
+      - type: "suggestion"
+        message: "Consider acetaminophen or topical NSAIDs for pain management"
+        references:
+          - type: "guideline"
+            id: "KDIGO_2021"
+            text: "KDIGO 2021 Clinical Practice Guideline for the Management of Glomerular Diseases"
+      - type: "explanation"
+        template: "This patient has advanced chronic kidney disease (eGFR {eGFR}) and is prescribed {medication}, a nephrotoxic NSAID. According to {guideline}, NSAIDs should be avoided in this population due to the risk of renal function deterioration."
+        variables:
+          - name: "eGFR"
+            source: "condition.eGFR"
+          - name: "medication"
+            source: "condition.medication"
+          - name: "guideline"
+            source: "action.references[0].text"

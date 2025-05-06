@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   irishealth-ce:
-    image: ghcr.io/intersystems/irishealth-community:2024.1.0.303.0
+    image: intersystems/irishealth-community:2023.1.0.229.0
     container_name: irishealth-ce
     restart: unless-stopped
     ports:
@@ -10,9 +10,7 @@ services:
       - "5001:5001"    # FHIR REST API
     volumes:
       - irishealth-ce-data:/data
-      - ./iris/iris-startup:/usr/irissys/Startup
-    env_file:
-      - .env
+      - ./iris-startup:/usr/irissys/Startup
     environment:
       ISC_CSP_DEV: "TRUE"
       ACCEPT_EULA: "true"
@@ -20,6 +18,9 @@ services:
       FHIR_URL: http://localhost:5001/fhir/r4
       RESOURCE_DIR: /usr/irissys/Startup/SamplePatients
       LOG_FILE: /usr/irissys/Startup/fhir_upload.log
+      IRIS_USERNAME: SuperUser
+      IRIS_PASSWORD: SYS
+      IRIS_NAMESPACE: USER
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:52773/csp/sys/UtilHome.csp || exit 1"]
       interval: 30s

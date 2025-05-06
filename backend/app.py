@@ -1,140 +1,298 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.concurrency import run_in_threadpool
-from pydantic import BaseModel
-from typing import List
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
+from typing import List, Dict, Any, Optional
+import logging
+import os
+import time
+from dotenv import load_dotenv
+from tenacity import retry, stop_after_attempt, wait_exponential
+from prometheus_client import Counter, Histogram, generate_latest
+from prometheus_fastapi_instrumentator import Instrumentator
+
+from models import (
+    Patient, Alert, Rule, RuleCondition, RuleAction,
+    RuleExplanation, SeverityLevel, Feedback
+)
 from fhir_client import FHIRClient
 from llm_explainer import LLMExplainer
+from trie_engine import TrieEngine
 from rule_loader import RuleLoader
-from models import Patient, Alert
+from feedback import FeedbackSystem
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
 
 # Initialize FastAPI app
-app = FastAPI(title="FHIR Rules and LLM Services")
+app = FastAPI(
+    title="Clinical Decision Support System",
+    description="API for clinical rule matching and explanation services",
+    version="1.0.0"
+)
 
-# CORS middleware configuration
+# Add Prometheus instrumentation
+Instrumentator().instrument(app).expose(app)
+
+# Add middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust this in production to restrict origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["*"]
+)
+
 # Initialize services
 fhir_client = FHIRClient()
 llm_explainer = LLMExplainer()
+trie_engine = TrieEngine()
+rule_loader = RuleLoader("rules")
+feedback_system = FeedbackSystem()
 
-# Load rules from directory
-rule_loader = RuleLoader()
-rules = rule_loader.load_rules()
+# Load rules with retry mechanism
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
+def load_rules():
+    try:
+        rules = rule_loader.load_rules()
+        for rule in rules:
+            trie_engine.add_rule(rule)
+        return rules
+    except Exception as e:
+        logger.error(f"Error loading rules: {str(e)}")
+        raise
 
-# Pydantic models for request and response
-class RuleRequest(BaseModel):
-    patient: Patient
+# Load rules on startup
+@app.on_event("startup")
+async def startup_event():
+    try:
+        load_rules()
+    except Exception as e:
+        logger.error(f"Failed to load rules: {str(e)}")
 
-class ExplanationRequest(BaseModel):
-    rule_id: str
-    patient: Patient
+# Metrics
+REQUEST_COUNT = Counter(
+    'http_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status']
+)
 
-class ExplanationResponse(BaseModel):
-    explanation: str
+REQUEST_LATENCY = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request latency',
+    ['method', 'endpoint']
+)
+
+# Middleware for metrics
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    duration = time.time() - start_time
+    
+    REQUEST_COUNT.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        status=response.status_code
+    ).inc()
+    
+    REQUEST_LATENCY.labels(
+        method=request.method,
+        endpoint=request.url.path
+    ).observe(duration)
+    
+    return response
+
+# Health check endpoints
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "version": "1.0.0",
+        "timestamp": time.time()
+    }
+
+@app.get("/health/detailed")
+async def detailed_health_check():
+    health_status = {
+        "status": "healthy",
+        "version": "1.0.0",
+        "timestamp": time.time(),
+        "components": {
+            "rules": {
+                "status": "healthy",
+                "count": len(rule_loader.load_rules())
+            },
+            "fhir": {
+                "status": "healthy" if fhir_client else "unhealthy"
+            },
+            "llm": {
+                "status": "healthy" if llm_explainer else "unhealthy"
+            }
+        }
+    }
+    return health_status
+
+@app.get("/metrics")
+async def metrics():
+    return Response(generate_latest(), media_type="text/plain")
+
+# API endpoints
+@app.get("/")
+async def root():
+    return {
+        "name": "Clinical Decision Support System",
+        "version": "1.0.0",
+        "status": "operational"
+    }
 
 @app.post("/match-rules", response_model=List[Alert])
-async def match_rules(request: RuleRequest):
-    """
-    Match rules against a given patient.
-    """
+async def match_rules(patient: Patient):
     try:
-        patient = request.patient
         alerts = []
-
-        # Search by rule text if provided in patient name
-        if patient.name:
-            name_entry = patient.name[0]
-            if hasattr(name_entry, "text"):
-                query = name_entry.text.lower()
-                for rule in rules:
-                    rule_id = rule.get("id")
-                    rule_text = rule.get("text", "")
-                    if rule_id and query in rule_text.lower():
-                        alerts.append(Alert(rule_id=rule_id, message=rule_text))
-
-        # Condition-based rule matching
+        rules = rule_loader.load_rules()
+        
         for rule in rules:
-            rule_id = rule.get("id")
-            conditions = rule.get("conditions", [])
-            actions = rule.get("actions", [])
-            match = True
-            for cond in conditions:
-                cond_type = cond.get("type")
-                operator = cond.get("operator")
-                value = cond.get("value")
-                patient_val = getattr(patient, cond_type, None)
-                if patient_val is None:
-                    match = False
-                    break
-                try:
-                    # Compare values
-                    if operator == "<" and not (patient_val < value):
-                        match = False
-                        break
-                    elif operator == ">" and not (patient_val > value):
-                        match = False
-                        break
-                    elif operator in ("=", "==") and not (patient_val == value):
-                        match = False
-                        break
-                    elif operator == "<=" and not (patient_val <= value):
-                        match = False
-                        break
-                    elif operator == ">=" and not (patient_val >= value):
-                        match = False
-                        break
-                    # Add other operators as needed
-                except Exception:
-                    match = False
-                    break
-            if match and rule_id:
-                # Create alerts for each alert action
-                for action in actions:
-                    if action.get("type") == "alert":
-                        message = action.get("message", "")
-                        severity = action.get("severity")  # if exists
-                        alerts.append(Alert(rule_id=rule_id, message=message, severity=severity))
+            triggered = False
+            triggered_by = []
+            
+            for condition in rule.conditions:
+                if condition["type"] == "lab":
+                    for obs in patient.conditions.observations:
+                        if obs.code == condition["code"]:
+                            if _check_lab_condition(obs, condition):
+                                triggered = True
+                                triggered_by.append(f"{obs.display}: {obs.value} {obs.unit}")
+                
+                elif condition["type"] == "medication":
+                    for med in patient.conditions.medications:
+                        if med.code == condition["code"]:
+                            if _check_med_condition(med, condition):
+                                triggered = True
+                                triggered_by.append(f"{med.display}")
+                
+                elif condition["type"] == "condition":
+                    for cond in patient.conditions.conditions:
+                        if cond.code == condition["code"]:
+                            if _check_condition(cond, condition):
+                                triggered = True
+                                triggered_by.append(f"{cond.display}")
+            
+            if triggered:
+                # Get LLM explanation
+                explanation = await llm_explainer.explain(rule.id, patient.dict())
+                
+                # Get feedback statistics
+                feedback_stats = await feedback_system.get_rule_feedback(rule.id)
+                
+                alerts.append(Alert(
+                    rule_id=rule.id,
+                    message=rule.actions[0]["message"],
+                    severity=rule.severity,
+                    triggered_by=triggered_by,
+                    explanation=explanation,
+                    feedback_stats=feedback_stats
+                ))
+        
         return alerts
+    
     except Exception as e:
+        logger.error(f"Error matching rules: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/explain-rule", response_model=ExplanationResponse)
-async def explain_rule(request: ExplanationRequest):
-    """
-    Explain a specific rule for a given patient.
-    """
+@app.post("/explain-rule", response_model=RuleExplanation)
+async def explain_rule(rule_id: str, patient: Patient):
     try:
-        explanation = await run_in_threadpool(llm_explainer.explain, request.rule_id, request.patient)
-        return ExplanationResponse(explanation=explanation)
+        explanation = await llm_explainer.explain(rule_id, patient.dict())
+        return explanation
     except Exception as e:
+        logger.error(f"Error explaining rule: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/patients/{patient_id}", response_model=Patient)
 async def get_patient(patient_id: str):
-    """
-    Retrieve a patient by ID from the FHIR server.
-    """
     try:
-        patient = await fhir_client.get_patient(patient_id)
-        if not patient:
-            raise HTTPException(status_code=404, detail="Patient not found")
-        return patient
-    except HTTPException:
-        # Re-raise HTTP exceptions (e.g., 404 from FHIR client)
-        raise
+        patient_data = await fhir_client.get_patient(patient_id)
+        return patient_data
     except Exception as e:
+        logger.error(f"Error fetching patient: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/")
-async def root():
-    return {"message": "Welcome to the FHIR Rules and LLM Services API"}
+@app.get("/suggest-rules")
+async def suggest_rules(prefix: str):
+    try:
+        suggestions = trie_engine.search(prefix)
+        return {"suggestions": suggestions}
+    except Exception as e:
+        logger.error(f"Error suggesting rules: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/feedback")
+async def submit_feedback(feedback: Feedback):
+    try:
+        result = await feedback_system.record_feedback(
+            feedback.alert_id,
+            feedback.rule_id,
+            feedback.helpful,
+            feedback.comments
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Error submitting feedback: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/feedback/{rule_id}")
+async def get_rule_feedback(rule_id: str):
+    try:
+        feedback = await feedback_system.get_rule_feedback(rule_id)
+        return feedback
+    except Exception as e:
+        logger.error(f"Error getting feedback: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/feedback/recent")
+async def get_recent_feedback(limit: int = 10):
+    try:
+        feedback = await feedback_system.get_recent_feedback(limit)
+        return feedback
+    except Exception as e:
+        logger.error(f"Error getting recent feedback: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Helper functions
+def _check_lab_condition(observation: Any, condition: Dict[str, Any]) -> bool:
+    if condition["operator"] == "<":
+        return observation.value < condition["value"]
+    elif condition["operator"] == ">":
+        return observation.value > condition["value"]
+    elif condition["operator"] == "<=":
+        return observation.value <= condition["value"]
+    elif condition["operator"] == ">=":
+        return observation.value >= condition["value"]
+    elif condition["operator"] in ["=", "=="]:
+        return observation.value == condition["value"]
+    elif condition["operator"] == "!=":
+        return observation.value != condition["value"]
+    return False
+
+def _check_med_condition(medication: Any, condition: Dict[str, Any]) -> bool:
+    if condition["operator"] == "=":
+        return medication.status == condition["value"]
+    return False
+
+def _check_condition(condition_obj: Any, condition: Dict[str, Any]) -> bool:
+    if condition["operator"] == "=":
+        return condition_obj.status == condition["value"]
+    return False
 
 if __name__ == "__main__":
     import uvicorn
