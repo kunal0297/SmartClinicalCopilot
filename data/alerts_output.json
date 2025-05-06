@@ -1,0 +1,12 @@
+[
+  {
+    "rule_id": "CKD_NSAID",
+    "message": "Patient should avoid NSAIDs due to low eGFR.",
+    "severity": "warning"
+  },
+  {
+    "rule_id": "QT_Prolongation",
+    "message": "Patient is at risk for QT prolongation. Monitor QT interval.",
+    "severity": "critical"
+  }
+]
