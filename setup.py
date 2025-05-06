@@ -13,6 +13,6 @@ module = Extension(
 setup(
     name="trie_wrapper",
     version="1.0",
-    description="Python C extension wrapper for trie engine",
+    description="High-performance C-based Trie for clinical rule matching",
     ext_modules=[module],
 )
