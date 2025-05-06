@@ -10,13 +10,14 @@ const RuleEditor: React.FC<RuleEditorProps> = ({ onSubmit }) => {
   const [ruleText, setRuleText] = useState("");
 
   const handleSubmit = () => {
-    if (ruleText.trim().length === 0) return;
-    onSubmit(ruleText);
+    const trimmedRule = ruleText.trim();
+    if (!trimmedRule) return;
+    onSubmit(trimmedRule);
     setRuleText("");
   };
 
   return (
-    <Box sx={{ marginBottom: 3 }}>
+    <Box sx={{ mb: 3 }}>
       <Typography variant="h6" gutterBottom>
         Enter Custom Rule to Search
       </Typography>
@@ -28,7 +29,7 @@ const RuleEditor: React.FC<RuleEditorProps> = ({ onSubmit }) => {
         value={ruleText}
         onChange={(e) => setRuleText(e.target.value)}
         placeholder="Type your clinical rule here..."
-        sx={{ marginBottom: 2 }}
+        sx={{ mb: 2 }}
       />
       <Button variant="contained" onClick={handleSubmit}>
         Search Rule
