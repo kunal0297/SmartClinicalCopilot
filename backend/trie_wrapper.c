@@ -1,5 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Declare trie engine functions and struct from trie_engine.c
 typedef struct TrieNode TrieNode;
