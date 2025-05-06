@@ -1,6 +1,6 @@
 import httpx
 from fastapi import HTTPException
-from models import Patient  # Assuming you have a Patient model defined in models.py
+from models import Patient  # Pydantic model for Patient
 
 class FHIRClient:
     def __init__(self, base_url: str = "http://localhost:5001/fhir/r4"):
@@ -14,40 +14,21 @@ class FHIRClient:
             patient_id (str): The ID of the patient to retrieve.
 
         Returns:
-            Patient: The patient data.
-
+            Patient: The patient data if found.
         Raises:
-            HTTPException: If the patient is not found or if there is an error in the request.
+            HTTPException: For HTTP errors.
         """
         url = f"{self.base_url}/Patient/{patient_id}"
         async with httpx.AsyncClient() as client:
             response = await client.get(url)
 
             if response.status_code == 200:
-                return Patient(**response.json())  # Assuming Patient model can be instantiated with JSON data
+                data = response.json()
+                return Patient(**data)
             elif response.status_code == 404:
-                raise HTTPException(status_code=404, detail="Patient not found")
+                return None
             else:
-                raise HTTPException(status_code=response.status_code, detail="Error retrieving patient data")
-
-    async def search_patients(self, name: str) -> list[Patient]:
-        """
-        Search for patients by name.
-
-        Args:
-            name (str): The name of the patient to search for.
-
-        Returns:
-            list[Patient]: A list of patients matching the search criteria.
-        """
-        url = f"{self.base_url}/Patient?name={name}"
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url)
-
-            if response.status_code == 200:
-                return [Patient(**patient) for patient in response.json().get("entry", [])]
-            else:
-                raise HTTPException(status_code=response.status_code, detail="Error searching for patients")
+                raise HTTPException(status_code=response.status_code, detail="Error fetching patient")
 
 # Example usage:
 # fhir_client = FHIRClient()
