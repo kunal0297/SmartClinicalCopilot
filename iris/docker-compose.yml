@@ -6,22 +6,23 @@ services:
     container_name: irishealth-ce
     restart: unless-stopped
     ports:
-      - "52773:52773"  # IRIS Management Portal → http://localhost:52773/csp/sys/UtilHome.csp
-      - "5001:5001"    # FHIR REST API → http://localhost:5001/fhir/r4/
+      - "52773:52773"  # IRIS Management Portal
+      - "5001:5001"    # FHIR REST API
     volumes:
       - irishealth-ce-data:/data
-      - ./iris-startup:/usr/irissys/Startup  # Custom startup scripts (load FHIR resources/rules)
+      - ./iris-startup:/usr/irissys/Startup  # Includes your enhanced script & sample JSON
     env_file:
-      - ../.env  # Store IRIS_USERNAME and IRIS_PASSWORD securely in .env
+      - ../.env
     environment:
-      ISC_CSP_DEV: "TRUE"     # Enable IRIS developer mode (for CSP, useful for development)
-      ACCEPT_EULA: "true"     # Accept InterSystems EULA
-      ISC_DATA_ENV: /data     # IRIS database directory inside container
+      ISC_CSP_DEV: "TRUE"
+      ACCEPT_EULA: "true"
+      ISC_DATA_ENV: /data
+      # Optional: override FHIR_URL, RESOURCE_DIR, LOG_FILE from script
+      FHIR_URL: http://localhost:5001/fhir/r4
+      RESOURCE_DIR: /usr/irissys/Startup/SamplePatients
+      LOG_FILE: /usr/irissys/Startup/fhir_upload.log
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:52773/csp/sys/UtilHome.csp || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
-
-volumes:
-  irishealth-ce-data:
