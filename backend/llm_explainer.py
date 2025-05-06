@@ -1,31 +1,88 @@
-# backend/llm_explainer.py
-
-import os
-import openai
+import httpx
+import json
+from fastapi import HTTPException
 from models import Patient
+from typing import Optional
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+class FHIRClient:
+    def __init__(self, base_url: str = "http://localhost:5001/fhir/r4"):
+        self.base_url = base_url
 
-class LLMExplainer:
-    def __init__(self):
-        if not openai.api_key:
-            raise ValueError("OPENAI_API_KEY environment variable not set")
+    async def get_patient(self, patient_id: str) -> Optional[Patient]:
+        """
+        Retrieve a patient by ID from the FHIR server.
 
-    def explain(self, rule_id: str, patient: Patient) -> str:
-        prompt = (
-            f"Explain the clinical rule with ID {rule_id} "
-            f"for the following patient data:\n{patient.json()}"
-        )
-        try:
-            response = openai.Completion.create(
-                engine="text-davinci-003",
-                prompt=prompt,
-                max_tokens=200,
-                temperature=0.7,
-                n=1,
-                stop=None,
-            )
-            explanation = response.choices[0].text.strip()
-            return explanation
-        except Exception as e:
-            return f"Failed to get explanation: {str(e)}"
+        Args:
+            patient_id (str): The ID of the patient to retrieve.
+
+        Returns:
+            Optional[Patient]: The patient data if found, otherwise None.
+
+        Raises:
+            HTTPException: For HTTP errors.
+        """
+        url = f"{self.base_url}/Patient/{patient_id}"
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+
+            if response.status_code == 200:
+                data = response.json()
+                return Patient(**data)
+            elif response.status_code == 404:
+                return None
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Error fetching patient: {response.text}"
+                )
+
+    async def search_patients(self, name: str) -> List[Patient]:
+        """
+        Search for patients by name.
+
+        Args:
+            name (str): The name of the patient to search for.
+
+        Returns:
+            List[Patient]: A list of patients matching the search criteria.
+        """
+        url = f"{self.base_url}/Patient?name={name}"
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+
+            if response.status_code == 200:
+                data = response.json()
+                return [Patient(**patient) for patient in data.get("entry", [])]
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Error searching for patients: {response.text}"
+                )
+
+    async def get_patient_history(self, patient_id: str) -> List[Patient]:
+        """
+        Retrieve the history of a patient's records.
+
+        Args:
+            patient_id (str): The ID of the patient.
+
+        Returns:
+            List[Patient]: A list of historical patient records.
+        """
+        url = f"{self.base_url}/Patient/{patient_id}/_history"
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+
+            if response.status_code == 200:
+                data = response.json()
+                return [Patient(**entry["resource"]) for entry in data.get("entry", [])]
+            else:
+                raise HTTPException(
+                    status_code=response.status_code,
+                    detail=f"Error fetching patient history: {response.text}"
+                )
+
+# Example usage:
+# fhir_client = FHIRClient()
+# patient = await fhir_client.get_patient("12345")
+# print(patient)
