@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h
 
 // Define the structure for a trie node
 typedef struct TrieNode {
@@ -59,3 +60,9 @@ void free_trie(TrieNode *root) {
     }
     free(root);
 }
+
+// Example usage:
+// TrieNode *root = create_node();
+// insert(root, "example");
+// printf("%d\n", search(root, "example"));  // Output: 1
+// free_trie(root);
