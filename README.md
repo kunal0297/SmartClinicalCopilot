@@ -1,4 +1,4 @@
-# SmartClinicalCopilot
+# Smart Clinical Copilot
 SmartClinicalCopilot is an AI-powered assistant designed to support healthcare professionals by streamlining clinical workflows, enhancing diagnostic accuracy, and improving patient care. Leveraging advanced natural language processing and machine learning techniques, this tool aims to be an indispensable asset in modern clinical settings.
 
 Features
