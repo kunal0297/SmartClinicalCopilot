@@ -10,14 +10,13 @@ services:
       - "5001:5001"    # FHIR REST API
     volumes:
       - irishealth-ce-data:/data
-      - ./iris-startup:/usr/irissys/Startup  # Includes your enhanced script & sample JSON
+      - ./iris/iris-startup:/usr/irissys/Startup
     env_file:
-      - ../.env
+      - .env
     environment:
       ISC_CSP_DEV: "TRUE"
       ACCEPT_EULA: "true"
       ISC_DATA_ENV: /data
-      # Optional: override FHIR_URL, RESOURCE_DIR, LOG_FILE from script
       FHIR_URL: http://localhost:5001/fhir/r4
       RESOURCE_DIR: /usr/irissys/Startup/SamplePatients
       LOG_FILE: /usr/irissys/Startup/fhir_upload.log
@@ -26,3 +25,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+volumes:
+  irishealth-ce-data:
