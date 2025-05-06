@@ -1,12 +1,16 @@
 // src/pages/Dashboard.tsx
 import React, { useState, useEffect } from "react";
-import { Container, Typography, CircularProgress, Box, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from "@mui/material";
+import {
+  Container, Typography, CircularProgress, Box,
+  Button, Dialog, DialogTitle, DialogContent,
+  DialogContentText, DialogActions
+} from "@mui/material";
 import PatientViewer from "../components/PatientViewer";
 import AlertCard from "../components/AlertCard";
 import RuleEditor from "../components/RuleEditor";
 import { fetchPatient, matchRules, explainRule } from "../api";
 
-const DUMMY_PATIENT_ID = "example_patient_id"; // Replace with real ID or user input
+const DUMMY_PATIENT_ID = "example_patient_id";
 
 const Dashboard: React.FC = () => {
   const [patient, setPatient] = useState<any>(null);
@@ -36,13 +40,16 @@ const Dashboard: React.FC = () => {
   const handleRuleSearch = async (ruleText: string) => {
     setLoading(true);
     try {
-      // Search rule by querying backend with custom rule text as a patient? (or customize as needed)
-      const alertData = await matchRules({ id: "custom", name: [{ text: ruleText }] });
+      const alertData = await matchRules({
+        id: "custom",
+        name: [{ text: ruleText }],
+      });
       setAlerts(alertData);
     } catch (error) {
       console.error("Error searching rule:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleExplainRule = async (ruleId: string) => {
@@ -55,8 +62,9 @@ const Dashboard: React.FC = () => {
     } catch (error) {
       setExplanation("Failed to get explanation.");
       console.error("Explain rule error:", error);
+    } finally {
+      setExplanationLoading(false);
     }
-    setExplanationLoading(false);
   };
 
   const handleCloseExplanation = () => {
@@ -69,15 +77,22 @@ const Dashboard: React.FC = () => {
       <Typography variant="h4" gutterBottom>
         Clinical Rules Dashboard
       </Typography>
+
       {loading && <CircularProgress />}
       {!loading && patient && <PatientViewer patient={patient} />}
 
       <RuleEditor onSubmit={handleRuleSearch} />
 
-      {!loading && alerts.length === 0 && <Typography>No alerts found.</Typography>}
+      {!loading && alerts.length === 0 && (
+        <Typography>No alerts found.</Typography>
+      )}
 
       {alerts.map((alert) => (
-        <Box key={alert.rule_id} sx={{ cursor: "pointer" }} onClick={() => handleExplainRule(alert.rule_id)}>
+        <Box
+          key={alert.rule_id}
+          sx={{ cursor: "pointer" }}
+          onClick={() => handleExplainRule(alert.rule_id)}
+        >
           <AlertCard alert={alert} />
         </Box>
       ))}
