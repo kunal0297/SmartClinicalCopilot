@@ -2,8 +2,20 @@
 import React from "react";
 import { Typography, Paper, List, ListItem, ListItemText } from "@mui/material";
 
+interface HumanName {
+  given?: string[];
+  family?: string;
+}
+
+interface Patient {
+  id: string;
+  name?: HumanName[];
+  gender?: string;
+  birthDate?: string;
+}
+
 interface PatientViewerProps {
-  patient: any;
+  patient?: Patient;
 }
 
 const PatientViewer: React.FC<PatientViewerProps> = ({ patient }) => {
@@ -11,31 +23,33 @@ const PatientViewer: React.FC<PatientViewerProps> = ({ patient }) => {
     return <Typography>Loading patient data...</Typography>;
   }
 
+  const { id, name, gender, birthDate } = patient;
+  const fullName = name?.[0]
+    ? `${name[0].given?.join(" ") || ""} ${name[0].family || ""}`.trim()
+    : undefined;
+
   return (
-    <Paper sx={{ padding: 2, marginBottom: 3 }}>
+    <Paper sx={{ p: 2, mb: 3 }}>
       <Typography variant="h5" gutterBottom>
         Patient Information
       </Typography>
       <List>
         <ListItem>
-          <ListItemText primary="ID" secondary={patient.id} />
+          <ListItemText primary="ID" secondary={id} />
         </ListItem>
-        {patient.name && patient.name.length > 0 && (
+        {fullName && (
           <ListItem>
-            <ListItemText
-              primary="Name"
-              secondary={\`\${patient.name[0].given?.join(" ") || ""} \${patient.name[0].family || ""}\`}
-            />
+            <ListItemText primary="Name" secondary={fullName} />
           </ListItem>
         )}
-        {patient.gender && (
+        {gender && (
           <ListItem>
-            <ListItemText primary="Gender" secondary={patient.gender} />
+            <ListItemText primary="Gender" secondary={gender} />
           </ListItem>
         )}
-        {patient.birthDate && (
+        {birthDate && (
           <ListItem>
-            <ListItemText primary="Date of Birth" secondary={patient.birthDate} />
+            <ListItemText primary="Date of Birth" secondary={birthDate} />
           </ListItem>
         )}
       </List>
