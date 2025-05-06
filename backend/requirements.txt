@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+httpx
+pydantic
+PyYAML
+openai
