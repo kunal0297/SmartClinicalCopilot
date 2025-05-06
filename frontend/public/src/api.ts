@@ -2,26 +2,37 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000", // Backend URL
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: "http://localhost:8000",
+  headers: { "Content-Type": "application/json" },
 });
 
+export interface Patient {
+  id: string;
+  name?: { text?: string; given?: string[]; family?: string }[];
+  gender?: string;
+  birthDate?: string;
+}
+
+export interface Alert {
+  rule_id: string;
+  message: string;
+  severity?: string;
+}
+
 // Fetch Patient by ID
-export const fetchPatient = async (patientId: string) => {
-  const response = await api.get(\`/patients/\${patientId}\`);
+export const fetchPatient = async (patientId: string): Promise<Patient> => {
+  const response = await api.get(`/patients/${patientId}`);
   return response.data;
 };
 
 // Match clinical rules for patient
-export const matchRules = async (patientData: any) => {
+export const matchRules = async (patientData: any): Promise<Alert[]> => {
   const response = await api.post("/match-rules", { patient: patientData });
-  return response.data; // Array of alerts
+  return response.data;
 };
 
 // Request explanation for a clinical rule
-export const explainRule = async (ruleId: string, patientData: any) => {
+export const explainRule = async (ruleId: string, patientData: any): Promise<string> => {
   const response = await api.post("/explain-rule", {
     rule_id: ruleId,
     patient: patientData,
