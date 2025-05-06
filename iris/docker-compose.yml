@@ -10,7 +10,7 @@ services:
       - "5001:5001"    # FHIR REST API → http://localhost:5001/fhir/r4/
     volumes:
       - irishealth-ce-data:/data
-      - ./iris/iris-startup:/usr/irissys/Startup  # Custom startup scripts (load FHIR resources/rules)
+      - ./iris-startup:/usr/irissys/Startup  # Custom startup scripts (load FHIR resources/rules)
     env_file:
       - ../.env  # Store IRIS_USERNAME and IRIS_PASSWORD securely in .env
     environment:
