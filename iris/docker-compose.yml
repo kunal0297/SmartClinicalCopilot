@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  irishealth-ce:
+    image: ghcr.io/intersystems/irishealth-community:2024.1.0.303.0
+    container_name: irishealth-ce
+    restart: unless-stopped
+    ports:
+      - "52773:52773"  # IRIS Management Portal → http://localhost:52773/csp/sys/UtilHome.csp
+      - "5001:5001"    # FHIR REST API → http://localhost:5001/fhir/r4/
+    volumes:
+      - irishealth-ce-data:/data
+      - ./iris/iris-startup:/usr/irissys/Startup  # Custom startup scripts (load FHIR resources/rules)
+    env_file:
+      - ../.env  # Store IRIS_USERNAME and IRIS_PASSWORD securely in .env
+    environment:
+      ISC_CSP_DEV: "TRUE"     # Enable IRIS developer mode (for CSP, useful for development)
+      ACCEPT_EULA: "true"     # Accept InterSystems EULA
+      ISC_DATA_ENV: /data     # IRIS database directory inside container
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:52773/csp/sys/UtilHome.csp || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  irishealth-ce-data:
