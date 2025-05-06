@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
@@ -58,7 +58,6 @@ async def match_rules(request: RuleRequest):
                     rule_text = rule.get("text", "")
                     if rule_id and query in rule_text.lower():
                         alerts.append(Alert(rule_id=rule_id, message=rule_text))
-                return alerts
 
         # Condition-based rule matching
         for rule in rules:
