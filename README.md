@@ -145,3 +145,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - FastAPI
 - OpenAI
 - FHIR Community
+## 📡 InterSystems IRIS for Health Integration
+
+This project uses InterSystems IRIS for Health as the primary FHIR data server and backend datastore, leveraging its native FHIR Resource Repository and high-performance capabilities for real-time clinical data exchange.
