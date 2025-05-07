@@ -1,86 +1,49 @@
-# SmartClinicalCopilot 🏥
+# SmartClinicalCopilot 
 
-A fast, personalized, and explainable clinical decision support system that uses FHIR, Trie rule-matching, and LLMs to deliver context-aware alerts and AI-driven reasoning support.
+A fast, personalized, and explainable clinical decision support system (CDSS) built on **InterSystems IRIS for Health Community Edition**. This system integrates **FHIR data ingestion**, **Trie-based rule matching**, and **LLM-powered natural language explanations** to deliver context-aware alerts and evidence-driven clinical reasoning.
+
+---
 
 ## 🌟 Key Features
 
-### 1. FHIR Data Engine
-- Real-time integration with InterSystems IRIS for Health
-- Structured data ingestion (conditions, medications, lab results)
-- Efficient caching system for improved performance
-- Secure authentication with IRIS credentials
+###  FHIR Data Engine
+- Real-time integration with **InterSystems IRIS for Health Community Edition**
+- Structured ingestion of patient Conditions, Medications, and Lab Results
+- Secure IRIS credential-based authentication
+- Optimized caching for high-performance querying
 
-### 2. Trie Rule Matcher
-- Lightning-fast rule matching using Trie data structure
-- Support for complex clinical conditions
-- Real-time rule validation and suggestions
-- Efficient pattern matching for clinical rules
+###  Trie Rule Matcher
+- High-speed rule matching using a Trie data structure
+- Support for complex, multi-condition clinical rules
+- Real-time rule validation and intelligent suggestions
+- Rapid pattern matching for clinical scenarios
 
-### 3. Alert Generator
-- Prioritized alerts based on severity and confidence
-- Context-aware alert generation
-- Integration with clinical guidelines
-- Real-time alert processing
+###  Alert Generator
+- Prioritized clinical alerts based on severity and confidence scores
+- Context-sensitive alert generation
+- Seamless integration with evidence-based clinical guidelines
+- Real-time alert delivery to the user interface
 
-### 4. LLM Reasoning Module
-- Natural language explanations for alerts
-- Evidence-based recommendations
-- Clinical guideline references
-- Fallback to template-based explanations when LLM is unavailable
+###  LLM Reasoning Module
+- AI-generated natural language explanations for clinical alerts
+- Contextual evidence summaries and guideline references
+- Template-based fallback explanations when LLM API is unavailable
 
-### 5. Feedback System
-- Track alert helpfulness
-- Rule-specific feedback statistics
-- Continuous improvement through user feedback
-- Historical feedback analysis
+###  Feedback and Learning System
+- Clinician feedback collection on alert usefulness
+- Rule-specific feedback analytics and usage statistics
+- Continuous alerting system improvement via feedback loop
+- Historical feedback tracking and reporting
 
-## 🚀 Getting Started
+---
 
-### Prerequisites
-- Python 3.9
-- InterSystems IRIS for Health
-- Node.js 16+ (for frontend)
-- OpenAI API key (optional, for enhanced explanations)
+##  InterSystems IRIS for Health Integration
 
-### Installation
+This application uses **InterSystems IRIS for Health Community Edition** as its primary FHIR data server and clinical data repository. It leverages native **FHIR R4 Resource Repository** and **FHIR REST APIs** for secure, real-time healthcare data exchange.
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/SmartClinicalCopilot.git
-cd SmartClinicalCopilot
-```
+---
 
-2. Set up the backend:
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
-pip install -r requirements.txt
-```
-
-3. Configure environment variables:
-Create a `.env` file in the backend directory:
-```
-FHIR_SERVER_URL=http://localhost:52773/csp/healthshare/fhir/r4
-IRIS_USERNAME=your_iris_username
-IRIS_PASSWORD=your_iris_password
-OPENAI_API_KEY=your_openai_api_key
-```
-
-4. Start the backend server:
-```bash
-python app.py
-```
-
-5. Set up the frontend:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-## 📊 System Architecture
-
+##  System Architecture Overview
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
 │   FHIR Engine   │────▶│  Trie Matcher   │────▶│ Alert Generator │
@@ -92,59 +55,116 @@ npm run dev
 └─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
 
-## 🔧 API Endpoints
+---
 
-- `GET /patients/{id}` - Get patient data
-- `POST /match-rules` - Match clinical rules
-- `POST /suggest-rules` - Get rule suggestions
-- `POST /feedback` - Submit alert feedback
-- `GET /feedback/{rule_id}` - Get rule feedback stats
-- `GET /feedback/recent` - Get recent feedback
+##  Getting Started
 
-## 🎯 Example Use Case
+###  Prerequisites
 
-Patient: 68 y/o male with CKD Stage 4, on ibuprofen
+- **Python 3.9**
+- **InterSystems IRIS for Health Community Edition**  
+  [Download or pull container](https://evaluation.intersystems.com)
+- **Node.js 16+** (for frontend)
+- **OpenAI API key** (optional, for enhanced LLM explanations)
 
-1. System detects CKD and NSAID usage
-2. Trie matcher identifies relevant rule
-3. Alert generated with severity level
-4. LLM provides explanation:
-   "This patient has advanced chronic kidney disease (eGFR < 30) and is prescribed ibuprofen, a nephrotoxic NSAID. According to KDIGO 2021 guidelines, NSAIDs should be avoided in this population due to the risk of renal function deterioration."
-5. System suggests: "Consider acetaminophen or topical NSAIDs for pain management. Review recent labs to reassess renal function trend."
+>  **Note:** For containerized deployment, consider using:
 
-## 📈 Performance Metrics
+---
 
-- Rule matching: < 100ms
-- FHIR data retrieval: < 500ms
-- LLM explanation generation: < 2s
-- Overall system response: < 3s
+##  Installation & Setup
 
-## 🔐 Security Features
+### 1️⃣ Clone the Repository
+```bash
+git clone https://github.com/kunal0297/SmartClinicalCopilot.git
+cd SmartClinicalCopilot
+```
+2️⃣ Backend Setup (Python + FastAPI)
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+pip install -r requirements.txt
+```
+3️⃣ Configure Environment Variables
+Create a .env file inside the backend directory:
+```bash
+FHIR_SERVER_URL=http://localhost:52773/csp/healthshare/fhir/r4
+IRIS_USERNAME=your_iris_username
+IRIS_PASSWORD=your_iris_password
+OPENAI_API_KEY=your_openai_api_key  # optional
+```
+4️⃣ Start Backend Server
+```bash
+python app.py
+```
+5️⃣ Frontend Setup (React + Vite)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+ Example Clinical Use Case
+Patient: 68 y/o male with CKD Stage 4, prescribed ibuprofen
 
-- Secure IRIS authentication
-- CORS protection
-- Input validation
-- Rate limiting
-- Error handling
+Workflow:
 
-## 🤝 Contributing
+System retrieves patient data via FHIR API from IRIS
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+Trie Matcher identifies NSAID nephrotoxicity rule conflict
 
-## 📝 License
+Alert Generator flags severity: High
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+LLM Reasoning Module explains:
 
-## 🙏 Acknowledgments
+"This patient has advanced chronic kidney disease (eGFR < 30) and is prescribed ibuprofen, a nephrotoxic NSAID. According to KDIGO 2021 guidelines, NSAIDs should be avoided in this population due to the risk of renal function deterioration."
 
-- InterSystems IRIS for Health
-- FastAPI
-- OpenAI
-- FHIR Community
-## 📡 InterSystems IRIS for Health Integration
+System suggests safer alternatives (e.g., acetaminophen) and lab review
 
-This project uses InterSystems IRIS for Health as the primary FHIR data server and backend datastore, leveraging its native FHIR Resource Repository and high-performance capabilities for real-time clinical data exchange.
+ Performance Benchmarks
+| Task                       | Response Time |
+| :------------------------- | :------------ |
+| Rule Matching              | < 100 ms      |
+| FHIR Data Retrieval        | < 500 ms      |
+| LLM Explanation Generation | < 2 sec       |
+| End-to-End System Response | < 3 sec       |
+ Security Features
+• Secure IRIS credential authentication
+
+• CORS protection for cross-origin requests
+
+• API request input validation
+
+• Rate limiting for API endpoints
+
+• Centralized error handling and logging
+📡 API Endpoints
+| Method | Endpoint              | Description                        |
+| :----- | :-------------------- | :--------------------------------- |
+| `GET`  | `/patients/{id}`      | Retrieve patient FHIR data         |
+| `POST` | `/match-rules`        | Match clinical rules for a patient |
+| `POST` | `/suggest-rules`      | Suggest new clinical rules         |
+| `POST` | `/feedback`           | Submit alert feedback              |
+| `GET`  | `/feedback/{rule_id}` | Retrieve feedback stats by rule    |
+| `GET`  | `/feedback/recent`    | View recent feedback entries       |
+ Contributing
+Fork this repository
+
+1. Create your feature branch (git checkout -b feature/foo)
+
+2. Commit your changes (git commit -am 'Add new feature')
+
+3. Push to your branch (git push origin feature/foo)
+
+4. Open a Pull Request
+ License
+This project is licensed under the MIT License — see the LICENSE file for details.
+ Acknowledgments
+InterSystems IRIS for Health
+
+FastAPI
+
+OpenAI
+
+FHIR Community
+
+React & Vite
