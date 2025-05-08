@@ -1,4 +1,4 @@
-# SmartClinicalCopilot 
+# Smart Clinical Copilot 
 
 A fast, personalized, and explainable clinical decision support system (CDSS) built on **InterSystems IRIS for Health Community Edition**. This system integrates **FHIR data ingestion**, **Trie-based rule matching**, and **LLM-powered natural language explanations** to deliver context-aware alerts and evidence-driven clinical reasoning.
 
@@ -106,7 +106,7 @@ npm run dev
  Example Clinical Use Case
 Patient: 68 y/o male with CKD Stage 4, prescribed ibuprofen
 
-Workflow:
+## Workflow:
 
 System retrieves patient data via FHIR API from IRIS
 
@@ -119,15 +119,16 @@ LLM Reasoning Module explains:
 "This patient has advanced chronic kidney disease (eGFR < 30) and is prescribed ibuprofen, a nephrotoxic NSAID. According to KDIGO 2021 guidelines, NSAIDs should be avoided in this population due to the risk of renal function deterioration."
 
 System suggests safer alternatives (e.g., acetaminophen) and lab review
-
- Performance Benchmarks
+---
+## Performance Benchmarks
 | Task                       | Response Time |
 | :------------------------- | :------------ |
 | Rule Matching              | < 100 ms      |
 | FHIR Data Retrieval        | < 500 ms      |
 | LLM Explanation Generation | < 2 sec       |
 | End-to-End System Response | < 3 sec       |
- Security Features
+---
+ ## Security Features
 • Secure IRIS credential authentication
 
 • CORS protection for cross-origin requests
@@ -137,6 +138,7 @@ System suggests safer alternatives (e.g., acetaminophen) and lab review
 • Rate limiting for API endpoints
 
 • Centralized error handling and logging
+---
 📡 API Endpoints
 | Method | Endpoint              | Description                        |
 | :----- | :-------------------- | :--------------------------------- |
@@ -146,7 +148,8 @@ System suggests safer alternatives (e.g., acetaminophen) and lab review
 | `POST` | `/feedback`           | Submit alert feedback              |
 | `GET`  | `/feedback/{rule_id}` | Retrieve feedback stats by rule    |
 | `GET`  | `/feedback/recent`    | View recent feedback entries       |
- Contributing
+---
+## Contributing
 Fork this repository
 
 1. Create your feature branch (git checkout -b feature/foo)
@@ -156,9 +159,12 @@ Fork this repository
 3. Push to your branch (git push origin feature/foo)
 
 4. Open a Pull Request
- License
+---
+## License
 This project is licensed under the MIT License — see the LICENSE file for details.
- Acknowledgments
+---
+## Acknowledgments
+
 InterSystems IRIS for Health
 
 FastAPI
