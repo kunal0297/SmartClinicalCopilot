@@ -160,6 +160,10 @@ Fork this repository
 
 4. Open a Pull Request
 ---
+🤝 Author
+Developed by Kunal Pandey
+GitHub: kunal0297
+---
 ## License
 This project is licensed under the MIT License — see the LICENSE file for details.
 ---
@@ -174,3 +178,8 @@ OpenAI
 FHIR Community
 
 React & Vite
+---
+## Why This Matters
+In an era where clinical alert fatigue and black-box AI models threaten patient safety, Smart Clinical Copilot delivers transparent, context-aware, and evidence-based decision support — empowering clinicians with not just recommendations, but the reasoning behind them.
+
+It bridges clinical expertise, AI explainability, and real-time interoperability, aligned with HL7 FHIR standards and modern health IT infrastructure.
