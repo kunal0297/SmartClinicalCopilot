@@ -1,41 +1,39 @@
-# SmartClinicalCopilot Frontend 🎨
+# Smart Clinical Copilot Frontend 🎨
 
-A modern, responsive frontend for the SmartClinicalCopilot system, built with React and TypeScript.
+[![Powered by InterSystems IRIS for Health](https://img.shields.io/badge/Powered%20by-IRIS%20for%20Health-blue)](https://www.intersystems.com/iris/)
+
+A modern, responsive frontend for the Smart Clinical Copilot system, built with React, TypeScript, shadcn/ui, and Tailwind CSS.
 
 ## ✨ Features
 
-### 1. Clinical Dashboard
-- Real-time patient data display
-- Interactive rule matching interface
-- Alert prioritization and filtering
-- Clinical context visualization
+- **Live IRIS FHIR integration** (search real patient IDs)
+- **Cohort Analytics**: Real-time charts and summary cards from IRIS Health
+- **FHIR Resource Explorer**: Browse any FHIR resource type
+- **Dark/Light Mode**: Global toggle, animated transitions
+- **Modern, responsive UI**: MUI, custom cards, glowing hero effects, animated text
+- **Animated Hero Prompt**: TextGenerateEffect with framer-motion and Tailwind
+- **Patient Management**: Search, view, and analyze real patient data
+- **Rule Matching & Explainability**: Alerts, LLM/SHAP explanations
 
-### 2. Rule Management
-- Rule search with autocomplete
-- Rule validation and testing
-- Rule performance metrics
-- Rule feedback tracking
+## 🏥 IRIS for Health Integration
+- Requires a running IRIS for Health FHIR server (see backend README)
+- Enter a real patient ID from IRIS to view data and analytics
 
-### 3. Alert Interface
-- Severity-based alert display
-- Natural language explanations
-- Evidence-based recommendations
-- Clinical guideline references
+## 🧑‍💻 Demo/Test Patient IDs
+- Use a real patient ID from your IRIS FHIR instance. For demo, try: `1`, `2`, or use the FHIR Patient browser in IRIS to find IDs.
+- If you have no data, use the FHIR "Try It" feature in IRIS to create a patient.
 
-### 4. Feedback System
-- Alert helpfulness rating
-- Rule-specific feedback
-- Historical feedback analysis
-- Performance metrics
+## 🖼️ Screenshots
+<!-- Add screenshots here for contest submission -->
 
 ## 🛠️ Technical Stack
 
-- **Framework**: React 18
+- **Framework**: React 19
 - **Language**: TypeScript
-- **Styling**: Material-UI
+- **Styling**: Material-UI, Tailwind CSS v4, shadcn/ui
 - **State Management**: Redux Toolkit
 - **API Client**: Axios
-- **Testing**: Jest + React Testing Library
+- **Animation**: framer-motion
 - **Build Tool**: Vite
 
 ## 📦 Dependencies
@@ -43,24 +41,31 @@ A modern, responsive frontend for the SmartClinicalCopilot system, built with Re
 ```json
 {
   "dependencies": {
-    "@emotion/react": "^11.11.0",
-    "@emotion/styled": "^11.11.0",
-    "@mui/material": "^5.13.0",
-    "@reduxjs/toolkit": "^1.9.5",
-    "axios": "^1.4.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-redux": "^8.0.5",
-    "react-router-dom": "^6.11.1"
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.1.0",
+    "@mui/material": "^7.1.0",
+    "@types/recharts": "^1.8.29",
+    "axios": "^1.9.0",
+    "framer-motion": "^12.10.5",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.5.3",
+    "recharts": "^2.15.3",
+    "simplex-noise": "^4.0.3"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^14.0.0",
-    "@types/react": "^18.2.6",
-    "@types/react-dom": "^18.2.4",
-    "@vitejs/plugin-react": "^4.0.0",
-    "typescript": "^5.0.4",
-    "vite": "^4.3.5"
+    "@eslint/js": "^9.25.0",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "eslint": "^9.25.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.30.1",
+    "vite": "^6.3.5"
   }
 }
 ```
@@ -83,6 +88,10 @@ VITE_ENV=development
 ```bash
 npm run dev
 ```
+
+## ✨ Animated Hero Prompt
+
+The homepage features an animated hero prompt using the `TextGenerateEffect` component, powered by framer-motion and styled with Tailwind CSS. You can find the component in `src/components/ui/text-generate-effect.tsx` and the demo in `src/components/text-generate-effect-demo.tsx`.
 
 ## 📱 UI Components
 
@@ -122,6 +131,11 @@ npm run dev
 />
 ```
 
+### 5. Animated Hero Prompt (TextGenerateEffect)
+```tsx
+<TextGenerateEffect />
+```
+
 ## 🎨 UI/UX Features
 
 1. **Responsive Design**
@@ -141,9 +155,16 @@ npm run dev
 
 4. **User Experience**
    - Real-time updates
-   - Smooth animations
+   - Smooth and animated transitions (framer-motion)
+   - Animated hero prompt and glowing effects
    - Error handling
    - Loading states
+
+5. **Visual Polish**
+   - Animated text hero
+   - Glowing/gradient hover effects
+   - Vortex animated background (dark mode)
+   - Modern cards with blur and glassmorphism
 
 ## 📊 State Management
 

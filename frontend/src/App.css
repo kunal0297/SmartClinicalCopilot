@@ -1,8 +1,21 @@
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: linear-gradient(120deg, #e3f2fd 0%, #fce4ec 100%);
+  background-size: 200% 200%;
+  animation: gradientMove 8s ease-in-out infinite;
+}
+
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  padding: 0;
+  text-align: initial;
 }
 
 .logo {
@@ -35,6 +48,20 @@
 
 .card {
   padding: 2em;
+  transition: box-shadow 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+}
+.card:hover {
+  box-shadow: 0 8px 24px rgba(25, 118, 210, 0.18);
+  transform: translateY(-4px) scale(1.03);
+}
+
+button, .MuiButton-root {
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+button:hover, .MuiButton-root:hover {
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.18);
+  transform: scale(1.04);
 }
 
 .read-the-docs {

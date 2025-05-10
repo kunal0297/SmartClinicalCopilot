@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  iris:
+    image: intersystemsdc/iris-community:latest
+    ports:
+      - "52773:52773"
+      - "51773:51773"
+    volumes:
+      - iris_data:/usr/irissys/mgr
+    environment:
+      - ISC_PACKAGE_INSTALLDIR=/usr/irissys/mgr/python
+      - ISC_PACKAGE_MOUNTDIR=/usr/irissys/mgr/python
+    healthcheck:
+      test: ["CMD", "iris", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/clinical_copilot
+      - IRIS_HOST=iris
+      - IRIS_PORT=52773
+      - IRIS_NAMESPACE=USER
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    depends_on:
+      - iris
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_FHIR_SERVER_URL=http://localhost:8080/fhir
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:15
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=clinical_copilot
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  fhir-server:
+    image: hapiproject/hapi:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/clinical_copilot
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+    depends_on:
+      - db
+
+volumes:
+  iris_data:
+  postgres_data: 

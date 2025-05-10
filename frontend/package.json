@@ -14,10 +14,14 @@
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^7.1.0",
     "@mui/material": "^7.1.0",
+    "@types/recharts": "^1.8.29",
     "axios": "^1.9.0",
+    "framer-motion": "^12.10.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-router-dom": "^7.5.3"
+    "react-router-dom": "^7.5.3",
+    "recharts": "^2.15.3",
+    "simplex-noise": "^4.0.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

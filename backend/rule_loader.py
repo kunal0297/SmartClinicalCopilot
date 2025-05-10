@@ -48,7 +48,7 @@ class RuleLoader:
     def __init__(self, rules_dir: str = None):
         self.rules_dir = rules_dir or os.path.join(os.path.dirname(__file__), "rules")
 
-    def load_rules(self) -> List[Dict[str, Any]]:
+    def load_rules(self) -> List[Any]:
         """Load and validate all rules from the rules directory."""
         rules = []
         try:
@@ -60,7 +60,7 @@ class RuleLoader:
                         try:
                             # Validate rule structure
                             rule = Rule(**rule_data)
-                            rules.append(rule.dict())
+                            rules.append(rule)
                             logger.info(f"Successfully loaded rule: {rule.id}")
                         except Exception as e:
                             logger.error(f"Error validating rule in {filename}: {str(e)}")
@@ -68,7 +68,6 @@ class RuleLoader:
         except Exception as e:
             logger.error(f"Error loading rules: {str(e)}")
             return []
-
         return rules
 
     def validate_rule(self, rule_data: Dict[str, Any]) -> bool:

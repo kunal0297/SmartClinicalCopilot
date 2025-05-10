@@ -3,66 +3,51 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import Typography from '@mui/material/Typography';
-import Link from '@mui/material/Link';
+import React, { useMemo, useState } from 'react';
 import Home from './pages/Home';
 import Patients from './pages/Patients';
 import Rules from './pages/Rules';
-
-// Create a theme instance
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
+import CohortAnalytics from './pages/CohortAnalytics';
+import Navbar from './components/Navbar';
+import { PatientProvider } from './context/PatientContext.jsx';
+import VortexBackground from './components/VortexBackground';
 
 function App() {
+  const [mode, setMode] = useState<'light' | 'dark'>('dark');
+  const toggleMode = () => setMode((prev) => (prev === 'light' ? 'dark' : 'light'));
+  const theme = useMemo(() => createTheme({
+    palette: {
+      mode,
+      primary: { main: '#1976d2' },
+      secondary: { main: '#dc004e' },
+    },
+  }), [mode]);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-          <AppBar position="static">
-            <Toolbar>
-              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                Clinical Decision Support System
-              </Typography>
-              <Link href="/" color="inherit" sx={{ mx: 2 }}>
-                Home
-              </Link>
-              <Link href="/rules" color="inherit" sx={{ mx: 2 }}>
-                Rules
-              </Link>
-              <Link href="/patients" color="inherit" sx={{ mx: 2 }}>
-                Patients
-              </Link>
-            </Toolbar>
-          </AppBar>
-          <Container component="main" sx={{ mt: 4, mb: 4, flex: 1 }}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/rules" element={<Rules />} />
-              <Route path="/patients" element={<Patients />} />
-            </Routes>
-          </Container>
-          <Box component="footer" sx={{ py: 3, px: 2, mt: 'auto', backgroundColor: (theme) => theme.palette.grey[200] }}>
-            <Container maxWidth="sm">
-              <Typography variant="body2" color="text.secondary" align="center">
-                {'© '}
-                {new Date().getFullYear()}
-                {' Clinical Decision Support System'}
-              </Typography>
+      {mode === 'dark' && <VortexBackground />}
+      <PatientProvider>
+        <Router>
+          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+            <Navbar mode={mode} toggleMode={toggleMode} />
+            <Container component="main" maxWidth={false} sx={{ mt: 4, mb: 4, flex: 1, width: '100%' }}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/rules" element={<Rules />} />
+                <Route path="/patients" element={<Patients />} />
+                <Route path="/cohort-analytics" element={<CohortAnalytics />} />
+              </Routes>
             </Container>
+            <Box component="footer" sx={{ py: 3, px: 2, mt: 'auto', background: 'linear-gradient(90deg, #1976d2 0%, #42a5f5 100%)', width: '100vw' }}>
+              <span style={{ color: 'white', textAlign: 'center', display: 'block' }}>
+                {'© '}
+                {new Date().getFullYear()} {' Smart Clinical Copilot'}
+              </span>
+            </Box>
           </Box>
-        </Box>
-      </Router>
+        </Router>
+      </PatientProvider>
     </ThemeProvider>
   );
 }

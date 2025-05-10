@@ -1,0 +1,77 @@
+[
+  {
+    "id": "demo-1",
+    "resourceType": "Patient",
+    "name": [{ "family": "Smith", "given": ["Alice"] }],
+    "gender": "female",
+    "birthDate": "1980-01-01",
+    "conditions": [
+      {
+        "id": "cond-1",
+        "resourceType": "Condition",
+        "code": { "text": "Diabetes mellitus" },
+        "clinicalStatus": { "text": "active" },
+        "onsetDateTime": "2010-01-01"
+      }
+    ],
+    "observations": [
+      {
+        "id": "obs-1",
+        "resourceType": "Observation",
+        "code": { "text": "Hemoglobin A1c" },
+        "valueQuantity": { "value": 7.2, "unit": "%" },
+        "effectiveDateTime": "2023-01-01"
+      }
+    ]
+  },
+  {
+    "id": "demo-2",
+    "resourceType": "Patient",
+    "name": [{ "family": "Johnson", "given": ["Bob"] }],
+    "gender": "male",
+    "birthDate": "1975-05-15",
+    "conditions": [
+      {
+        "id": "cond-2",
+        "resourceType": "Condition",
+        "code": { "text": "Hypertension" },
+        "clinicalStatus": { "text": "active" },
+        "onsetDateTime": "2015-06-01"
+      }
+    ],
+    "observations": [
+      {
+        "id": "obs-2",
+        "resourceType": "Observation",
+        "code": { "text": "Blood Pressure" },
+        "valueQuantity": { "value": 135, "unit": "mmHg" },
+        "effectiveDateTime": "2023-02-01"
+      }
+    ]
+  },
+  {
+    "id": "demo-3",
+    "resourceType": "Patient",
+    "name": [{ "family": "Lee", "given": ["Carol"] }],
+    "gender": "female",
+    "birthDate": "1990-09-09",
+    "conditions": [
+      {
+        "id": "cond-3",
+        "resourceType": "Condition",
+        "code": { "text": "Asthma" },
+        "clinicalStatus": { "text": "active" },
+        "onsetDateTime": "2005-03-15"
+      }
+    ],
+    "observations": [
+      {
+        "id": "obs-3",
+        "resourceType": "Observation",
+        "code": { "text": "Peak Expiratory Flow" },
+        "valueQuantity": { "value": 400, "unit": "L/min" },
+        "effectiveDateTime": "2023-03-01"
+      }
+    ]
+  }
+] 

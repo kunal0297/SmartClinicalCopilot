@@ -11,6 +11,12 @@ const api = axios.create({
 
 export interface Patient {
   id: string;
+  demographics?: {
+    name?: string;
+    age?: number;
+    gender?: string;
+    birth_date?: string;
+  };
   conditions: {
     observations: Array<{
       code: string;
@@ -55,6 +61,12 @@ export interface Rule {
   severity: string;
 }
 
+export interface CohortAnalytics {
+  diabetics: number;
+  hypertensives: number;
+  [key: string]: number;
+}
+
 export const getPatient = async (patientId: string): Promise<Patient> => {
   const response = await api.get(`/patients/${patientId}`);
   return response.data;
@@ -73,4 +85,9 @@ export const suggestRules = async (prefix: string): Promise<string[]> => {
 export const explainRule = async (ruleId: string, patient: Patient): Promise<string> => {
   const response = await api.post('/explain-rule', { rule_id: ruleId, patient });
   return response.data.explanation;
+};
+
+export const getCohortAnalytics = async (): Promise<CohortAnalytics> => {
+  const response = await api.get('/cohort-analytics');
+  return response.data;
 }; 
