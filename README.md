@@ -178,6 +178,7 @@ OpenAI
 FHIR Community
 
 React & Vite
+
 ---
 ## Why This Matters
 In an era where clinical alert fatigue and black-box AI models threaten patient safety, Smart Clinical Copilot delivers transparent, context-aware, and evidence-based decision support — empowering clinicians with not just recommendations, but the reasoning behind them.
