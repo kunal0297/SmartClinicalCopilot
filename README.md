@@ -1,139 +1,159 @@
 # SmartClinicalCopilot 🏥
 
-A fast, personalized, and explainable clinical decision support system that uses FHIR, Trie rule-matching, and LLMs to deliver context-aware alerts and AI-driven reasoning support.
+A world-class clinical decision support system that combines evidence-based guidelines, high-performance rule matching, and AI-powered explanations to provide real-time clinical guidance.
 
 ## 🌟 Key Features
 
-### 1. FHIR Data Engine
-- Real-time integration with InterSystems IRIS for Health
-- Structured data ingestion (conditions, medications, lab results)
-- Efficient caching system for improved performance
-- Secure authentication with IRIS credentials
+### 1. Evidence-Based Clinical Rules
+- Integration with major clinical guidelines (KDIGO, ACC/AHA, ADA)
+- High-impact clinical rules for critical scenarios
+- Inline citations and guideline references
+- Support for clinical prediction rules (CHA₂DS₂-VASc, Wells Score)
 
-### 2. Trie Rule Matcher
-- Lightning-fast rule matching using Trie data structure
-- Support for complex clinical conditions
+### 2. High-Impact Clinical Rules
+- Drug-drug interactions (QT prolongation)
+- Medication contraindications by lab values
+- Duplicate therapy detection
+- Opioid risk assessment
+- Clinical prediction rule integration
+
+### 3. Trie Rule Matcher
+- High-performance rule matching using Trie data structure
+- Support for complex clinical conditions and combinations
 - Real-time rule validation and suggestions
-- Efficient pattern matching for clinical rules
+- Pattern matching for clinical rules with sub-second response times
 
-### 3. Alert Generator
+### 4. Alert System
 - Prioritized alerts based on severity and confidence
 - Context-aware alert generation
 - Integration with clinical guidelines
-- Real-time alert processing
+- Real-time alert processing and delivery
 
-### 4. LLM Reasoning Module
-- Natural language explanations for alerts
+### 5. LLM Reasoning Module
+- Natural language explanations for clinical alerts
 - Evidence-based recommendations
 - Clinical guideline references
-- Fallback to template-based explanations when LLM is unavailable
+- Fallback to template-based explanations
+- Local LLM support via Hugging Face Transformers
 
-### 5. Feedback System
+### 6. Feedback & Analytics
 - Track alert helpfulness
 - Rule-specific feedback statistics
-- Continuous improvement through user feedback
-- Historical feedback analysis
+- Alert fatigue metrics
+- Rule firing frequency analysis
+- Override rate tracking
+
+### 7. SMART on FHIR Launch and OAuth2 Support
+- EHR integration capabilities
+- Secure authentication and authorization
+- Prometheus monitoring and metrics
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.9
-- InterSystems IRIS for Health
-- Node.js 16+ (for frontend)
-- OpenAI API key (optional, for enhanced explanations)
+- **Python 3.9+** (Recommended: 3.9 or 3.10)
+- **Node.js 16+**
+- **Docker & Docker Compose** (for full stack)
+- **OpenAI API key** (optional, for LLM explanations)
+- **SMART on FHIR credentials** (for EHR integration)
 
-### Installation
-
-1. Clone the repository:
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/yourusername/SmartClinicalCopilot.git
 cd SmartClinicalCopilot
 ```
 
-2. Set up the backend:
+### 2. Environment Variables
+Create a `.env` file in the `backend/` directory with the following (edit as needed):
+```env
+# OpenAI
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4
+OPENAI_TEMPERATURE=0.7
+OPENAI_MAX_TOKENS=1000
+
+# SMART on FHIR
+SMART_CLIENT_ID=your_client_id
+SMART_CLIENT_SECRET=your_client_secret
+SMART_REDIRECT_URI=http://localhost:8000/smart/callback
+SMART_STATE_SECRET=your_state_secret
+SMART_JWT_SECRET=your_jwt_secret
+
+# FHIR
+FHIR_BASE_URL=http://localhost:8080/fhir
+FHIR_TIMEOUT=30
+
+# Other (optional)
+API_KEY=your_api_key
+LOG_LEVEL=INFO
+```
+
+### 3. Backend Setup
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
-pip install -r requirements.txt
-```
-
-3. Configure environment variables:
-Create a `.env` file in the backend directory:
-```
-FHIR_SERVER_URL=http://localhost:52773/csp/healthshare/fhir/r4
-IRIS_USERNAME=your_iris_username
-IRIS_PASSWORD=your_iris_password
-OPENAI_API_KEY=your_openai_api_key
-```
-
-4. Start the backend server:
-```bash
+# On Windows:
+venv\Scripts\activate
+# On Mac/Linux:
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r ../requirements.txt
+python setup.py build_ext --inplace  # If using C extensions
 python app.py
 ```
 
-5. Set up the frontend:
+### 4. Frontend Setup
 ```bash
-cd frontend
+cd ../frontend
 npm install
 npm run dev
 ```
 
-## 📊 System Architecture
-
+### 5. Docker Compose (Full Stack)
+```bash
+docker-compose up -d
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   FHIR Engine   │────▶│  Trie Matcher   │────▶│ Alert Generator │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-        │                       │                       │
-        ▼                       ▼                       ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  LLM Explainer  │◀───▶│  Feedback Sys   │◀───▶│   Copilot UI    │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- FHIR Server: http://localhost:8080
+- IRIS: http://localhost:52773
+
+## 🧪 Testing
+```bash
+# Backend tests
+cd backend
+pytest
+
+# Frontend tests
+cd ../frontend
+npm test
 ```
 
-## 🔧 API Endpoints
+## 🛠️ Troubleshooting
+- **Python version**: Use Python 3.9 or 3.10 for best compatibility.
+- **Missing dependencies**: Run `pip install -r requirements.txt` from the project root.
+- **SMART/FHIR errors**: Ensure all SMART and FHIR env variables are set.
+- **LLM explanations not working**: Set your OpenAI API key in `.env`.
+- **Rule validation errors**: Check YAML files in `backend/rules/` for required fields (`id`, `text`, `conditions`, `actions`).
+- **C extension errors**: Run `python setup.py build_ext --inplace` in `backend/`.
+- **Docker issues**: Ensure Docker Desktop is running and ports are not in use.
 
-- `GET /patients/{id}` - Get patient data
-- `POST /match-rules` - Match clinical rules
-- `POST /suggest-rules` - Get rule suggestions
-- `POST /feedback` - Submit alert feedback
-- `GET /feedback/{rule_id}` - Get rule feedback stats
-- `GET /feedback/recent` - Get recent feedback
+## ✅ Post-Setup Checklist
+- [ ] Backend starts with `python app.py` (no import/module errors)
+- [ ] Frontend starts with `npm run dev` (shows UI at http://localhost:3000)
+- [ ] API docs available at http://localhost:8000/docs
+- [ ] Rule YAML files load without critical errors
+- [ ] `.env` file is present in `backend/` and all required keys are set
+- [ ] (Optional) LLM explanations work if OpenAI key is set
 
-## 🎯 Example Use Case
+## 📚 Clinical Guidelines
 
-Patient: 68 y/o male with CKD Stage 4, on ibuprofen
-
-1. System detects CKD and NSAID usage
-2. Trie matcher identifies relevant rule
-3. Alert generated with severity level
-4. LLM provides explanation:
-   "This patient has advanced chronic kidney disease (eGFR < 30) and is prescribed ibuprofen, a nephrotoxic NSAID. According to KDIGO 2021 guidelines, NSAIDs should be avoided in this population due to the risk of renal function deterioration."
-5. System suggests: "Consider acetaminophen or topical NSAIDs for pain management. Review recent labs to reassess renal function trend."
-
-## 📈 Performance Metrics
-
-- Rule matching: < 100ms
-- FHIR data retrieval: < 500ms
-- LLM explanation generation: < 2s
-- Overall system response: < 3s
-
-## 🔐 Security Features
-
-- Secure IRIS authentication
-- CORS protection
-- Input validation
-- Rate limiting
-- Error handling
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+The system implements rules based on the following guidelines:
+- KDIGO 2021 Clinical Practice Guidelines
+- ACC/AHA Guidelines
+- ADA Standards of Medical Care
+- CDC Guidelines
+- GOLD Guidelines
 
 ## 📝 License
 
@@ -141,7 +161,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-- InterSystems IRIS for Health
+- HAPI FHIR
 - FastAPI
 - OpenAI
+- React
 - FHIR Community
+- InterSystems IRIS
