@@ -1,253 +1,275 @@
-# Smart Clinical Copilot Frontend 🎨
+# Smart Clinical Copilot - Frontend
 
-[![Powered by InterSystems IRIS for Health](https://img.shields.io/badge/Powered%20by-IRIS%20for%20Health-blue)](https://www.intersystems.com/iris/)
+The frontend application for the Smart Clinical Copilot configuration management system. Built with React, TypeScript, and Material-UI, this application provides a modern and intuitive interface for managing application configurations.
 
-A modern, responsive frontend for the Smart Clinical Copilot system, built with React, TypeScript, shadcn/ui, and Tailwind CSS.
+## Features
 
-## ✨ Features
+### User Interface
+- Modern, responsive design
+- Intuitive configuration management
+- Real-time validation feedback
+- Rich text editing with Monaco Editor
+- Interactive data visualization
+- Dark/Light theme support
 
-- **Live IRIS FHIR integration** (search real patient IDs)
-- **Cohort Analytics**: Real-time charts and summary cards from IRIS Health
-- **FHIR Resource Explorer**: Browse any FHIR resource type
-- **Dark/Light Mode**: Global toggle, animated transitions
-- **Modern, responsive UI**: MUI, custom cards, glowing hero effects, animated text
-- **Animated Hero Prompt**: TextGenerateEffect with framer-motion and Tailwind
-- **Patient Management**: Search, view, and analyze real patient data
-- **Rule Matching & Explainability**: Alerts, LLM/SHAP explanations
+### Configuration Management
+- Configuration editor with syntax highlighting
+- Template management
+- Validation rules editor
+- Import/Export functionality
+- Configuration history
+- Backup and restore
 
-## 🏥 IRIS for Health Integration
-- Requires a running IRIS for Health FHIR server (see backend README)
-- Enter a real patient ID from IRIS to view data and analytics
+### Security
+- Encryption/Decryption interface
+- Access control management
+- Audit logging viewer
+- Security statistics
 
-## 🧑‍💻 Demo/Test Patient IDs
-- Use a real patient ID from your IRIS FHIR instance. For demo, try: `1`, `2`, or use the FHIR Patient browser in IRIS to find IDs.
-- If you have no data, use the FHIR "Try It" feature in IRIS to create a patient.
+### Performance
+- Optimized rendering
+- Efficient state management
+- Caching strategies
+- Lazy loading
+- Code splitting
 
-## 🖼️ Screenshots
-<!-- Add screenshots here for contest submission -->
+## Technology Stack
 
-## 🛠️ Technical Stack
+- **React**: UI framework
+- **TypeScript**: Type-safe JavaScript
+- **Material-UI**: Component library
+- **Monaco Editor**: Code editor
+- **Recharts**: Data visualization
+- **React Query**: Data fetching
+- **Redux Toolkit**: State management
+- **Axios**: HTTP client
+- **Jest**: Testing framework
+- **Cypress**: E2E testing
 
-- **Framework**: React 19
-- **Language**: TypeScript
-- **Styling**: Material-UI, Tailwind CSS v4, shadcn/ui
-- **State Management**: Redux Toolkit
-- **API Client**: Axios
-- **Animation**: framer-motion
-- **Build Tool**: Vite
+## Project Structure
 
-## 📦 Dependencies
-
-```json
-{
-  "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^7.1.0",
-    "@mui/material": "^7.1.0",
-    "@types/recharts": "^1.8.29",
-    "axios": "^1.9.0",
-    "framer-motion": "^12.10.5",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router-dom": "^7.5.3",
-    "recharts": "^2.15.3",
-    "simplex-noise": "^4.0.3"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.25.0",
-    "@types/react": "^19.1.2",
-    "@types/react-dom": "^19.1.2",
-    "@vitejs/plugin-react": "^4.4.1",
-    "eslint": "^9.25.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
-    "globals": "^16.0.0",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.30.1",
-    "vite": "^6.3.5"
-  }
-}
+```
+frontend/
+├── public/
+│   ├── index.html
+│   └── assets/
+├── src/
+│   ├── components/
+│   │   ├── ConfigEditor/
+│   │   ├── ConfigSecurity/
+│   │   ├── ConfigTemplate/
+│   │   ├── ConfigValidation/
+│   │   ├── ConfigImportExport/
+│   │   └── ConfigStats/
+│   ├── hooks/
+│   │   ├── useConfig.ts
+│   │   ├── useAuth.ts
+│   │   └── useTheme.ts
+│   ├── services/
+│   │   ├── api.ts
+│   │   ├── config.ts
+│   │   └── auth.ts
+│   ├── store/
+│   │   ├── slices/
+│   │   └── index.ts
+│   ├── types/
+│   │   └── index.ts
+│   ├── utils/
+│   │   ├── validation.ts
+│   │   └── formatting.ts
+│   ├── App.tsx
+│   └── index.tsx
+├── package.json
+├── tsconfig.json
+└── README.md
 ```
 
-## 🔧 Setup
+## Getting Started
+
+### Prerequisites
+- Node.js 16+
+- npm or yarn
+
+### Installation
 
 1. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Configure environment:
+2. Create environment file:
 ```bash
-# .env
-VITE_API_URL=http://localhost:8000
-VITE_ENV=development
+cp .env.example .env
 ```
 
 3. Start development server:
 ```bash
-npm run dev
+npm start
 ```
 
-## ✨ Animated Hero Prompt
+### Development
 
-The homepage features an animated hero prompt using the `TextGenerateEffect` component, powered by framer-motion and styled with Tailwind CSS. You can find the component in `src/components/ui/text-generate-effect.tsx` and the demo in `src/components/text-generate-effect-demo.tsx`.
-
-## 📱 UI Components
-
-### 1. Patient Dashboard
-```tsx
-<PatientDashboard
-  patientId={id}
-  onAlertSelect={handleAlertSelect}
-  onFeedbackSubmit={handleFeedback}
-/>
-```
-
-### 2. Alert Display
-```tsx
-<AlertCard
-  alert={alert}
-  onFeedback={handleFeedback}
-  onExplain={handleExplain}
-/>
-```
-
-### 3. Rule Search
-```tsx
-<RuleSearch
-  onSearch={handleSearch}
-  onSelect={handleSelect}
-  suggestions={suggestions}
-/>
-```
-
-### 4. Feedback Form
-```tsx
-<FeedbackForm
-  alertId={alertId}
-  ruleId={ruleId}
-  onSubmit={handleSubmit}
-/>
-```
-
-### 5. Animated Hero Prompt (TextGenerateEffect)
-```tsx
-<TextGenerateEffect />
-```
-
-## 🎨 UI/UX Features
-
-1. **Responsive Design**
-   - Mobile-first approach
-   - Adaptive layouts
-   - Touch-friendly interfaces
-
-2. **Accessibility**
-   - ARIA labels
-   - Keyboard navigation
-   - Screen reader support
-
-3. **Performance**
-   - Code splitting
-   - Lazy loading
-   - Memoization
-
-4. **User Experience**
-   - Real-time updates
-   - Smooth and animated transitions (framer-motion)
-   - Animated hero prompt and glowing effects
-   - Error handling
-   - Loading states
-
-5. **Visual Polish**
-   - Animated text hero
-   - Glowing/gradient hover effects
-   - Vortex animated background (dark mode)
-   - Modern cards with blur and glassmorphism
-
-## 📊 State Management
-
-```typescript
-// Store configuration
-const store = configureStore({
-  reducer: {
-    alerts: alertsReducer,
-    rules: rulesReducer,
-    feedback: feedbackReducer,
-    ui: uiReducer
-  }
-});
-
-// Slice example
-const alertsSlice = createSlice({
-  name: 'alerts',
-  initialState,
-  reducers: {
-    setAlerts: (state, action) => {
-      state.items = action.payload;
-    },
-    addFeedback: (state, action) => {
-      state.feedback.push(action.payload);
-    }
-  }
-});
-```
-
-## 🧪 Testing
-
+1. **Running Tests**
 ```bash
-# Run tests
+# Unit tests
 npm test
 
-# Run with coverage
-npm test -- --coverage
-
-# Run specific test
-npm test -- AlertCard.test.tsx
+# E2E tests
+npm run cypress
 ```
 
-## 📈 Performance Optimization
+2. **Building for Production**
+```bash
+npm run build
+```
+
+3. **Code Quality**
+```bash
+# Linting
+npm run lint
+
+# Type checking
+npm run type-check
+```
+
+## Component Documentation
+
+### ConfigEditor
+The main configuration editor component that provides a rich interface for editing configuration values.
+
+```typescript
+interface ConfigEditorProps {
+  configs: Config[];
+  onSave: (config: Config) => Promise<void>;
+  onRefresh: () => void;
+}
+```
+
+### ConfigSecurity
+Component for managing encryption and security settings.
+
+```typescript
+interface ConfigSecurityProps {
+  open: boolean;
+  onClose: () => void;
+  onEncrypt: (value: string) => Promise<string>;
+  onDecrypt: (value: string) => Promise<string>;
+}
+```
+
+### ConfigTemplate
+Component for managing configuration templates.
+
+```typescript
+interface ConfigTemplateProps {
+  open: boolean;
+  onClose: () => void;
+  onSaveTemplate: (template: Template) => Promise<void>;
+  onDeleteTemplate: (templateId: string) => Promise<void>;
+  onApplyTemplate: (templateId: string, variables: Record<string, string>) => Promise<any>;
+  templates: Template[];
+}
+```
+
+### ConfigValidation
+Component for managing validation rules and running validations.
+
+```typescript
+interface ConfigValidationProps {
+  open: boolean;
+  onClose: () => void;
+  onValidate: (config: any) => Promise<any>;
+  onSaveRule: (rule: Rule) => Promise<void>;
+  onDeleteRule: (ruleId: string) => Promise<void>;
+  rules: Rule[];
+  results: ValidationResult[];
+}
+```
+
+### ConfigImportExport
+Component for importing and exporting configurations.
+
+```typescript
+interface ConfigImportExportProps {
+  open: boolean;
+  onClose: () => void;
+  onImport: (file: File) => Promise<void>;
+  onExport: (config: any) => Promise<void>;
+  onDelete: (configId: string) => Promise<void>;
+  configs: Config[];
+}
+```
+
+### ConfigStats
+Component for displaying configuration statistics and metrics.
+
+```typescript
+interface ConfigStatsProps {
+  open: boolean;
+  onClose: () => void;
+  stats: Stats;
+}
+```
+
+## State Management
+
+The application uses Redux Toolkit for state management. The main slices include:
+
+- **config**: Configuration state
+- **auth**: Authentication state
+- **ui**: UI state (theme, loading, etc.)
+
+## API Integration
+
+The frontend communicates with the backend through a RESTful API. The main API endpoints are:
+
+- `/api/config`: Configuration management
+- `/api/templates`: Template management
+- `/api/validation`: Validation rules
+- `/api/security`: Security operations
+- `/api/stats`: Statistics and metrics
+
+## Styling
+
+The application uses Material-UI's styling solution with custom theme configuration. The theme can be customized in `src/theme/index.ts`.
+
+## Testing
+
+### Unit Tests
+- Jest for unit testing
+- React Testing Library for component testing
+- Mock Service Worker for API mocking
+
+### E2E Tests
+- Cypress for end-to-end testing
+- Custom commands for common operations
+- Visual regression testing
+
+## Performance Optimization
 
 1. **Code Splitting**
-   - Route-based splitting
+   - Route-based code splitting
    - Component lazy loading
    - Dynamic imports
 
 2. **Caching**
-   - API response caching
-   - Local storage
-   - Service workers
+   - React Query for data caching
+   - Local storage for user preferences
+   - Service worker for offline support
 
 3. **Bundle Optimization**
    - Tree shaking
-   - Minification
-   - Compression
+   - Code minification
+   - Asset optimization
 
-## 🔐 Security
+## Contributing
 
-- HTTPS enforcement
-- XSS protection
-- CSRF tokens
-- Input sanitization
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
-## 🐛 Troubleshooting
+## License
 
-1. **Build Issues**
-   - Clear node_modules
-   - Update dependencies
-   - Check TypeScript errors
-
-2. **Runtime Issues**
-   - Check console errors
-   - Verify API connectivity
-   - Test component isolation
-
-3. **Performance Issues**
-   - Profile with React DevTools
-   - Check bundle size
-   - Monitor API calls
-
-## 📝 License
-
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.

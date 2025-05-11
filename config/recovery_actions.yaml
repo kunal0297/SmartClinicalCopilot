@@ -1,0 +1,263 @@
+# Recovery action configurations
+check_requirements:
+  command: "pip install -r requirements.txt"
+  timeout: 300
+  retry_count: 3
+  retry_delay: 5
+  success_criteria:
+    - "Successfully installed"
+    - "Requirement already satisfied"
+  failure_criteria:
+    - "ERROR:"
+    - "Could not find a version"
+  rollback_command: "pip install -r requirements.txt.bak"
+
+check_services:
+  command: "docker-compose ps"
+  timeout: 60
+  retry_count: 5
+  retry_delay: 10
+  success_criteria:
+    - "Up"
+    - "healthy"
+  failure_criteria:
+    - "Exit"
+    - "unhealthy"
+  rollback_command: "docker-compose down && docker-compose up -d"
+
+restart_service:
+  command: "docker-compose restart"
+  timeout: 120
+  retry_count: 3
+  retry_delay: 15
+  success_criteria:
+    - "Restarting"
+    - "Started"
+  failure_criteria:
+    - "Error"
+    - "Failed"
+  rollback_command: "docker-compose down && docker-compose up -d"
+
+validate_data:
+  command: "python -m pytest tests/test_data_validation.py"
+  timeout: 30
+  retry_count: 2
+  retry_delay: 1
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: "git checkout -- data/"
+
+clean_payload:
+  command: "python -m pytest tests/test_payload_cleaning.py"
+  timeout: 30
+  retry_count: 2
+  retry_delay: 1
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: "git checkout -- payloads/"
+
+auto_fix_code:
+  command: "python -m pytest tests/test_code_fixes.py"
+  timeout: 60
+  retry_count: 1
+  retry_delay: 0
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: "git checkout -- src/"
+
+check_disk_space:
+  command: "df -h"
+  timeout: 10
+  retry_count: 1
+  retry_delay: 0
+  success_criteria:
+    - "available"
+  failure_criteria:
+    - "No space left"
+  rollback_command: ""
+
+check_memory:
+  command: "free -m"
+  timeout: 10
+  retry_count: 1
+  retry_delay: 0
+  success_criteria:
+    - "available"
+  failure_criteria:
+    - "Out of memory"
+  rollback_command: ""
+
+check_cpu:
+  command: "top -bn1"
+  timeout: 10
+  retry_count: 1
+  retry_delay: 0
+  success_criteria:
+    - "Cpu(s)"
+  failure_criteria:
+    - "load average"
+  rollback_command: ""
+
+check_network:
+  command: "ping -c 1 8.8.8.8"
+  timeout: 10
+  retry_count: 3
+  retry_delay: 5
+  success_criteria:
+    - "bytes from"
+  failure_criteria:
+    - "100% packet loss"
+  rollback_command: ""
+
+check_database:
+  command: "python -m pytest tests/test_database.py"
+  timeout: 30
+  retry_count: 3
+  retry_delay: 5
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: ""
+
+check_api:
+  command: "python -m pytest tests/test_api.py"
+  timeout: 30
+  retry_count: 3
+  retry_delay: 5
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: ""
+
+check_auth:
+  command: "python -m pytest tests/test_auth.py"
+  timeout: 30
+  retry_count: 3
+  retry_delay: 5
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: ""
+
+check_logs:
+  command: "tail -n 100 logs/app.log"
+  timeout: 10
+  retry_count: 1
+  retry_delay: 0
+  success_criteria:
+    - "INFO"
+  failure_criteria:
+    - "ERROR"
+  rollback_command: ""
+
+check_config:
+  command: "python -m pytest tests/test_config.py"
+  timeout: 30
+  retry_count: 2
+  retry_delay: 1
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: "git checkout -- config/"
+
+check_security:
+  command: "python -m pytest tests/test_security.py"
+  timeout: 30
+  retry_count: 2
+  retry_delay: 1
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: "git checkout -- security/"
+
+check_performance:
+  command: "python -m pytest tests/test_performance.py"
+  timeout: 60
+  retry_count: 2
+  retry_delay: 1
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: "git checkout -- performance/"
+
+check_backup:
+  command: "python -m pytest tests/test_backup.py"
+  timeout: 30
+  retry_count: 2
+  retry_delay: 1
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: "git checkout -- backup/"
+
+check_monitoring:
+  command: "python -m pytest tests/test_monitoring.py"
+  timeout: 30
+  retry_count: 2
+  retry_delay: 1
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: "git checkout -- monitoring/"
+
+check_metrics:
+  command: "python -m pytest tests/test_metrics.py"
+  timeout: 30
+  retry_count: 2
+  retry_delay: 1
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: "git checkout -- metrics/"
+
+check_health:
+  command: "python -m pytest tests/test_health.py"
+  timeout: 30
+  retry_count: 2
+  retry_delay: 1
+  success_criteria:
+    - "passed"
+    - "PASSED"
+  failure_criteria:
+    - "failed"
+    - "FAILED"
+  rollback_command: "git checkout -- health/" 

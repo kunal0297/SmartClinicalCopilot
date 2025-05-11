@@ -10,12 +10,61 @@ services:
       - PORT=8000
       - FHIR_BASE_URL=http://hapi.fhir.org/baseR4
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - USE_LOCAL_LLM=${USE_LOCAL_LLM:-true}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-mistral}
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - ADDITIONAL_OLLAMA_INSTANCES=http://ollama2:11434,http://ollama3:11434
       - DEBUG=False
       - LOG_LEVEL=INFO
     volumes:
       - ./rules:/app/rules
+      - ./encrypted_metrics:/app/encrypted_metrics
+      - ./benchmarks:/app/benchmarks
+    depends_on:
+      - ollama
+      - ollama2
+      - ollama3
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  ollama2:
+    image: ollama/ollama:latest
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama2_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  ollama3:
+    image: ollama/ollama:latest
+    ports:
+      - "11436:11434"
+    volumes:
+      - ollama3_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -44,4 +93,7 @@ services:
     restart: unless-stopped
 
 volumes:
-  grafana-storage: 
+  grafana-storage:
+  ollama_data:
+  ollama2_data:
+  ollama3_data: 
