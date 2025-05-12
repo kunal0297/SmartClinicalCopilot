@@ -1,7 +1,0 @@
-# Machine Learning & AI Dependencies
-numpy>=1.21.2
-scikit-learn>=0.24.2
-shap>=0.40.0
-transformers>=4.35.2
-torch>=2.1.1
-openai>=1.3.0 
