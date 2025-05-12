@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome - Smart Clinical Copilot{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2 text-center">
+        <h1 class="display-4 mb-4">Welcome to Smart Clinical Copilot</h1>
+        <p class="lead mb-4">A comprehensive healthcare management system for modern medical practices.</p>
+        
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Patient Management</h5>
+                        <p class="card-text">Efficiently manage patient records, appointments, and medical history.</p>
+                        <a href="/admin/core/patient/" class="btn btn-primary">Manage Patients</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Medical Records</h5>
+                        <p class="card-text">Access and update patient medical records securely.</p>
+                        <a href="/admin/core/medicalrecord/" class="btn btn-primary">View Records</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">System Status</h5>
+                        <p class="card-text">Monitor system health and performance metrics.</p>
+                        <a href="/self-healing/status/" class="btn btn-primary">Check Status</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,10 +1,62 @@
 import os
 from dotenv import load_dotenv
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import yaml
+import threading
+from datetime import datetime, timedelta
 
 # Load environment variables
 load_dotenv()
+
+class MockRedis:
+    """In-memory Redis mock for development"""
+    def __init__(self):
+        self._data = {}
+        self._expiry = {}
+        self._lock = threading.Lock()
+        
+    def ping(self):
+        return True
+        
+    def get(self, key):
+        with self._lock:
+            if key in self._expiry and datetime.now() > self._expiry[key]:
+                del self._data[key]
+                del self._expiry[key]
+                return None
+            return self._data.get(key)
+            
+    def set(self, key, value):
+        with self._lock:
+            self._data[key] = value
+            
+    def setex(self, key, ttl, value):
+        with self._lock:
+            self._data[key] = value
+            self._expiry[key] = datetime.now() + timedelta(seconds=ttl)
+            
+    def delete(self, key):
+        with self._lock:
+            if key in self._data:
+                del self._data[key]
+            if key in self._expiry:
+                del self._expiry[key]
+                
+    def hmset(self, key, mapping):
+        with self._lock:
+            if key not in self._data:
+                self._data[key] = {}
+            self._data[key].update(mapping)
+            
+    def hgetall(self, key):
+        with self._lock:
+            return self._data.get(key, {})
+            
+    def ttl(self, key):
+        with self._lock:
+            if key in self._expiry:
+                return int((self._expiry[key] - datetime.now()).total_seconds())
+            return -1
 
 class Settings:
     API_VERSION = "1.0.0"
@@ -96,6 +148,9 @@ class Settings:
         
         # Load settings from config
         self._load_from_config()
+        
+        # Use mock Redis for development
+        self.redis_client = MockRedis()
         
     def _load_config(self) -> Dict[str, Any]:
         """Load configuration from YAML file"""
