@@ -120,8 +120,8 @@ cd SmartClinicalCopilot
 
 ```bash
 cd backend
-python3 -m venv venv
-source venv/bin/activate  # For Windows: venv\Scripts\activate
+python -m venv venv
+venv\Scripts\activate
 pip install --upgrade pip
 pip install -r requirements.txt
 python setup.py build_ext --inplace  # Optional
