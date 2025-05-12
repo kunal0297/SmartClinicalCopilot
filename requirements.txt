@@ -67,3 +67,6 @@ django-rest-auth==0.9.5
 django-rest-knox==4.2.0
 django-rest-framework-social-oauth2==1.0.7
 django-oauth-toolkit==2.1.0
+
+# ollama-python (updated)
+ollama-python==0.1.2
