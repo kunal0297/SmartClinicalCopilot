@@ -1,13 +1,13 @@
 
 # Smart Clinical Copilot - Configuration Management System
-=======
+
 # Smart Clinical Copilot 
 
 A modern, secure, and feature-rich configuration management system designed for healthcare applications. This system provides a comprehensive solution for managing application configurations with advanced features like encryption, validation, templates, and more.
 
 
 ## Features
-=======
+
 ## The AI-Powered Clinical Wingman You Wish You Had in Med School.
 
 🧠 What’s This About?
@@ -87,7 +87,7 @@ The system is built using a modern tech stack:
 - EHR integration capabilities
 - Secure authentication and authorization
 - Prometheus monitoring and metrics
-=======
+
 A fast, personalized, and explainable clinical decision support system (CDSS) built on **InterSystems IRIS for Health Community Edition**. This system integrates **FHIR data ingestion**, **Trie-based rule matching**, and **LLM-powered natural language explanations** to deliver context-aware alerts and evidence-driven clinical reasoning.
 
 ---
@@ -130,7 +130,7 @@ cd smart-clinical-copilot
 
 
 2. Install frontend dependencies:
-=======
+
 ### 2. Environment Variables
 Create a `.env` file in the `backend/` directory with the following (edit as needed):
 ```env
@@ -309,7 +309,7 @@ Backend:
 cd backend
 uvicorn main:app --reload
 ```
-=======
+
 Alert Generator flags severity: High
 
 
@@ -524,7 +524,7 @@ SmartClinicalCopilot/
 2. Update error patterns in `error_patterns.yaml`
 3. Configure strategy in `self_healing_config.yaml`
 
-=======
+
 ---
 ✨ Why You’ll Love It
 ✅ Zero black-box alerts
