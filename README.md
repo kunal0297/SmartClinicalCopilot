@@ -103,7 +103,7 @@
 ### Prerequisites
 
 * Node.js (v16+)
-* Python (3.8+, preferably 3.9/3.10)
+* Python 3.10.8(only)
 * Redis (optional, but recommended)
 * Docker (optional for containerized deployment)
 * OpenAI API Key (optional for AI explanations)
