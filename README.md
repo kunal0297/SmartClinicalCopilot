@@ -1,95 +1,113 @@
-# Smart Clinical Copilot
+# Smart Clinical Copilot - Configuration Management System
 
-Smart Clinical Copilot is a next-generation, AI-powered Clinical Decision Support System (CDSS) designed to revolutionize patient care by transforming clinical data into actionable insights. Built for healthcare IT teams, clinicians, and researchers, it seamlessly integrates with FHIR-based EHR servers, leveraging real-time data and cutting-edge machine learning to provide context-aware, evidence-backed alerts and recommendations. This system is engineered to tackle the most pressing challenges in modern healthcare, including alert fatigue, patient safety, and clinical decision transparency, while providing a robust, scalable foundation for advanced medical applications.
+**Smart Clinical Copilot** is a next-generation, AI-powered Clinical Decision Support System (CDSS) built to empower healthcare professionals with intelligent, real-time insights derived from complex clinical data. It is purposefully designed to integrate seamlessly into modern healthcare infrastructures, offering an advanced suite of tools to enhance clinical decision-making, reduce alert fatigue, improve patient safety, and support transparent, explainable recommendations. This system is optimized for integration with HL7 FHIR-based Electronic Health Records (EHRs), ensuring interoperability, scalability, and adaptability.
+
+> **Author**: Kunal Pandey
+> **Team Members**: Solo Project
+> **Contest**: InterSystems FHIR and Digital Health Interoperability Contest
+
+---
 
 ## 🚀 Key Features
 
-* **Real-Time FHIR Integration**
+### 🔗 Real-Time FHIR Integration
 
-  * Continuous, real-time data retrieval from HL7 FHIR R4 servers using SMART on FHIR protocols or direct API access.
-  * Context-aware alerts based on patient data, medical history, and clinical conditions.
+* Continuous, real-time clinical data retrieval from HL7 FHIR R4 servers using SMART on FHIR or direct API communication.
+* Intelligent alert generation based on context-aware analysis of patient vitals, history, lab results, and clinical encounters.
 
-* **High-Performance Rule Engine**
+### ⚡ High-Performance Rule Engine
 
-  * Fast, trie-based rule engine capable of evaluating complex clinical rules in real-time.
-  * Rules defined in YAML for easy customization, supporting multi-condition matching and flexible logic.
+* A custom trie-based engine capable of evaluating thousands of clinical rules within milliseconds.
+* Rules defined in YAML format, enabling easy customization, modular design, and support for multi-conditional logic.
+* Dynamic rule reloading without restarting services.
 
-* **AI-Powered Explanations**
+### 🤖 AI-Powered Explanations
 
-  * Integrates with OpenAI GPT-4 for generating natural language explanations.
-  * Provides guideline-referenced rationales to enhance clinical decision-making and reduce cognitive load for clinicians.
+* Seamless integration with OpenAI GPT-4 to generate clinician-friendly, natural language rationales for triggered alerts.
+* Citations and links to guideline sources embedded within explanations to ensure transparency and trust.
 
-* **Guideline-Based Alerts**
+### 📚 Guideline-Based Clinical Rules
 
-  * Supports major clinical guidelines (e.g., KDIGO, ACC/AHA, ADA, CDC, GOLD) with severity-graded alerts.
-  * Customizable rule definitions and threshold tuning for local practices, ensuring clinical relevance.
+* Support for a wide range of clinical guidelines:
 
-* **Configuration Management Interface**
+  * **KDIGO** (Kidney Disease)
+  * **ACC/AHA** (Cardiology)
+  * **ADA** (Diabetes)
+  * **CDC** (Infectious Diseases)
+  * **GOLD** (Pulmonary Diseases)
+* Custom threshold tuning, localization of rules, and severity grading of alerts.
 
-  * Web-based UI for defining, testing, and managing clinical rules.
-  * Version control, import/export features, validation tools, and real-time rule updates without system restarts.
+### 🛠️ Configuration Management Interface
 
-* **Self-Healing Framework**
+* Web-based UI to define, validate, and deploy clinical rules.
+* Rule versioning, import/export capabilities, YAML linting, and real-time updates.
+* Monaco-based editor for seamless rule writing and testing.
 
-  * Automated service recovery for improved reliability and uptime.
-  * Real-time monitoring with Prometheus and log-based diagnostics for proactive issue resolution.
+### 🔄 Self-Healing Framework
 
-* **Comprehensive Security**
+* Automated detection and recovery from system-level errors, connection losses, or service crashes.
+* Error signature pattern matching and retry logic.
+* Metrics and diagnostics exposed via Prometheus endpoints.
 
-  * OAuth2 (SMART on FHIR), API keys, RBAC (planned), and encrypted storage for sensitive data.
-  * Full audit trails and compliance with healthcare data protection regulations (e.g., HIPAA, GDPR).
+### 🔐 Comprehensive Security
 
-* **Analytics & Feedback Loop**
+* Industry-standard authentication via OAuth2 (SMART on FHIR) and optional API key validation.
+* Planned integration of Role-Based Access Control (RBAC).
+* Secure storage of credentials, encrypted communication, and audit logging.
+* Compliant with HIPAA, GDPR, and other regulatory frameworks.
 
-  * Tracks alert frequency, clinician feedback, and rule effectiveness to optimize performance over time.
-  * Includes dashboards for rule performance, alert override rates, and real-time usage statistics.
+### 📊 Analytics and Feedback Loop
 
-## 🏗️ Architecture Overview
+* Real-time dashboards for rule effectiveness, alert override rates, clinician feedback, and alert fatigue analytics.
+* Built-in feedback submission for clinicians to approve, reject, or comment on alerts.
+* Longitudinal analysis to refine rule sets over time.
 
-Smart Clinical Copilot utilizes a modern, containerized microservices architecture that ensures scalability, flexibility, and high availability.
+---
+
+## 🧠 System Architecture Overview
 
 ### Frontend
 
-* **Framework**: React + TypeScript (Vite-powered)
-* **Styling**: Material-UI, Monaco Editor for YAML rules
-* **Visualizations**: Recharts for data analytics and performance monitoring
-* **Responsive Design**: Mobile-friendly interfaces for seamless clinician experiences across devices
+* **Framework**: React (Vite-powered) with TypeScript
+* **Styling**: Material-UI (MUI)
+* **Code Editor**: Monaco Editor for advanced YAML editing
+* **Charts**: Recharts for visual data representation
+* **UX Design**: Fully responsive for desktops, tablets, and mobile devices
 
 ### Backend
 
 * **Framework**: FastAPI (Python)
-* **Data Layer**: SQLAlchemy, Redis for caching and counters
-* **AI Integration**: OpenAI API for real-time explanations
-* **Self-Healing**: Custom recovery strategies and error pattern matching for robust reliability
+* **ORM**: SQLAlchemy
+* **Cache/State Store**: Redis for high-performance alerting and analytics
+* **AI Layer**: OpenAI GPT-4 integration
+* **Self-Healing Engine**: YAML-defined recovery rules and diagnostics engine
 
-### Data Layer
+### Infrastructure
 
-* **FHIR Server**: InterSystems IRIS for Health or any FHIR R4-compliant server
-* **Caching and State**: Redis for real-time state management and low-latency response times
-
-### Self-Healing and Monitoring
-
-* **Metrics**: Prometheus for performance metrics and real-time alerting
-* **Error Recovery**: YAML-driven recovery rules for rapid incident response and automated issue mitigation
+* **FHIR Server**: InterSystems IRIS for Health (or any R4-compliant FHIR server)
+* **Deployment**: Docker-based deployment with Compose for local and production environments
+* **Monitoring**: Prometheus integration with metrics and alert rule exposure
 
 ### Data Flow
 
-1. **Data Ingestion** – Periodic data pulls from FHIR server using OAuth or system credentials.
-2. **Rule Evaluation** – Real-time rule matching against patient data to trigger meaningful alerts.
-3. **Alert Generation** – Severity-graded alerts with guideline references for precise, actionable insights.
-4. **AI Explanations** – Optional OpenAI-powered narratives for clinical context, reducing cognitive load.
-5. **Feedback Loop** – Continuous improvement based on clinician inputs, ensuring alerts remain relevant and impactful.
+1. **Ingestion** – OAuth2 or service-credential-based pull of patient data from FHIR endpoints
+2. **Processing** – Rule engine evaluates applicable clinical rules in real time
+3. **Alerting** – Alerts generated with severity and guideline metadata
+4. **Explanation** – GPT-4 generates clinician-readable narratives and justifications
+5. **Feedback** – Clinician input informs analytics and future rule refinement
 
-## 🔧 Step-by-Step Setup Guide
+---
+
+## 🔧 Setup Instructions
 
 ### Prerequisites
 
-* **Node.js** (v16+ for the frontend)
-* **Python** (3.8+ for the backend, 3.9 or 3.10 recommended)
-* **Redis** (optional, for caching and metrics)
-* **Docker** (optional, for containerized deployment)
-* **FHIR Server** (e.g., InterSystems IRIS for Health)
-* **OpenAI API Key** (optional, for AI-generated explanations)
+* Node.js (v16+)
+* Python (3.8+, preferably 3.9/3.10)
+* Redis (optional, but recommended)
+* Docker (optional for containerized deployment)
+* OpenAI API Key (optional for AI explanations)
+* FHIR Server (e.g., IRIS for Health)
 
 ### 1. Clone the Repository
 
@@ -100,67 +118,33 @@ cd SmartClinicalCopilot
 
 ### 2. Backend Setup
 
-Navigate to the backend directory:
-
 ```bash
 cd backend
-```
-
-Create a virtual environment:
-
-```bash
 python3 -m venv venv
-source venv/bin/activate  # For Windows use `venv\Scripts\activate`
-```
-
-Install dependencies:
-
-```bash
+source venv/bin/activate  # For Windows: venv\Scripts\activate
 pip install --upgrade pip
 pip install -r requirements.txt
-```
-
-(Optional) Rebuild C extensions if needed:
-
-```bash
-python setup.py build_ext --inplace
-```
-
-Start the FastAPI server:
-
-```bash
+python setup.py build_ext --inplace  # Optional
 uvicorn main:app --reload
 ```
 
-The backend should now be running at **[http://localhost:8000](http://localhost:8000)**.
+Access at: [http://localhost:8000](http://localhost:8000)
 
 ### 3. Frontend Setup
 
-Navigate to the frontend directory:
-
 ```bash
 cd ../frontend
-```
-
-Install frontend dependencies:
-
-```bash
 npm install
-```
-
-Start the frontend development server:
-
-```bash
 npm run dev
 ```
 
-The frontend should now be running at **[http://localhost:3000](http://localhost:3000)**.
+Access at: [http://localhost:3000](http://localhost:3000)
 
 ### 4. Environment Configuration
 
-Create a `.env` file in the `backend/` directory with the following:
+Create `.env` file in `backend/`:
 
-```ini
+```env
 FHIR_SERVER_URL=http://localhost:52773/csp/healthshare/fhir/r4
 IRIS_USERNAME=your_iris_username
 IRIS_PASSWORD=your_iris_password
@@ -171,39 +155,43 @@ OPENAI_API_KEY=your_openai_api_key
 
 ### 5. Docker Deployment (Optional)
 
-For an all-in-one deployment:
-
 ```bash
 docker-compose up -d
-```
-
-Stop and clean up:
-
-```bash
+# To stop:
 docker-compose down
 ```
 
 ### 6. Verify Installation
 
-Test the backend:
+* Test backend:
 
 ```bash
 curl http://localhost:8000/health
 ```
 
-Expected response: `{"status": "ok"}`.
+Expected response:
 
-Test the frontend by opening **[http://localhost:3000](http://localhost:3000)** in your browser.
+```json
+{"status": "ok"}
+```
 
-## 🤝 Contributing
+* Open the frontend: [http://localhost:3000](http://localhost:3000)
 
-Contributions are welcome! Please follow these guidelines:
+---
 
-* Fork the repository.
-* Write tests for any new functionality.
-* Follow coding standards (PEP8, ESLint, YAML best practices).
-* Update documentation as needed.
+## 🤝 Contributions
+
+This is a solo project submitted for the InterSystems Digital Health Contest. Contributions are welcome for future enhancements.
+
+### Guidelines
+
+* Fork the repository
+* Submit detailed pull requests with test coverage
+* Follow PEP8, ESLint, and YAML best practices
+* Include documentation updates for any new functionality
+
+---
 
 ## 📄 License
 
-MIT License. See LICENSE file for details.
+This project is licensed under the MIT License. See the LICENSE file for full details.
