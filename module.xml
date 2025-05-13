@@ -1,0 +1,33 @@
+<Manifest>
+  <Name>smart-clinical-copilot</Name>
+  <Version>1.0.0</Version>
+  <Packaging>module</Packaging>
+  <Description>A FHIR-based clinical rules engine with LLM explanations and frontend UI</Description>
+  <License>MIT</License>
+  <Author>Kunal Pandey</Author>
+  <Company>Independent</Company>
+  <URL>https://github.com/kunal0297/SmartClinicalCopilot</URL>
+
+  <System>
+    <MinimumIRISVersion>2024.1</MinimumIRISVersion>
+  </System>
+
+  <Namespaces>
+    <Namespace>USER</Namespace>
+  </Namespaces>
+
+  <Scripts>
+    <Script>
+      <Phase>PostInstall</Phase>
+      <Language>objectscript</Language>
+      <Text>
+        WRITE "✅ Smart Clinical Copilot installed successfully!", !
+        WRITE "ℹ️ Backend, rules, and frontend should be started externally or via Docker.", !
+      </Text>
+    </Script>
+  </Scripts>
+
+  <Dependencies>
+    <!-- No required ZPM packages unless you depend on other ZPM apps -->
+  </Dependencies>
+</Manifest>
