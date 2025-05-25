@@ -45,10 +45,10 @@ This isn’t just a project — it's a vision for AI-augmented healthcare that w
 
 ```mermaid
 graph TD
-    A[FHIR Server] --> B[Backend API \n FastAPI]
+    A[FHIR Server] --> B[Backend API <br> FastAPI]
     B --> C[Langchain GPT Engine]
     B --> D[Risk Analysis Engine]
-    D --> E[React Frontend \n Clinical UI]
+    D --> E[React Frontend <br> Clinical UI]
 ```
 
 * **FHIR Data Ingestion**: Connect to HAPI/IRIS servers or upload JSON
