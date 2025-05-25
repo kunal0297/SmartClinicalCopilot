@@ -21,8 +21,8 @@
       <Phase>PostInstall</Phase>
       <Language>objectscript</Language>
       <Text>
-        WRITE " Smart Clinical Copilot installed successfully!", !
-        WRITE " Backend, rules, and frontend should be started externally or via Docker.", !
+        WRITE "Smart Clinical Copilot installed successfully!", !
+        WRITE "Backend, rules, and frontend should be started externally or via Docker.", !
       </Text>
     </Script>
   </Scripts>
