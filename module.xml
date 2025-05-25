@@ -2,7 +2,7 @@
   <Name>smart-clinical-copilot</Name>
   <Version>1.0.0</Version>
   <Packaging>module</Packaging>
-  <Description>A FHIR-based clinical rules engine with LLM explanations and frontend UI</Description>
+  <Description>AI-powered FHIR assistant with LLM explainability, self-healing rules engine, and React dashboard UI.</Description>
   <License>MIT</License>
   <Author>Kunal Pandey</Author>
   <Company>Independent</Company>
@@ -20,14 +20,15 @@
     <Script>
       <Phase>PostInstall</Phase>
       <Language>objectscript</Language>
-      <Text>
-        WRITE "Smart Clinical Copilot installed successfully!", !
-        WRITE "Backend, rules, and frontend should be started externally or via Docker.", !
-      </Text>
+      <Text><![CDATA[
+        WRITE " Smart Clinical Copilot installed successfully!", !
+        WRITE " Backend, AI rules, and React UI should be started manually or via Docker.", !
+        WRITE " Run: docker-compose up --build", !
+      ]]></Text>
     </Script>
   </Scripts>
 
   <Dependencies>
-    <!-- No required ZPM packages unless you depend on other ZPM apps -->
+    <!-- No external ZPM dependencies -->
   </Dependencies>
 </Manifest>
