@@ -42,6 +42,7 @@ This isn’t just a project — it's a vision for AI-augmented healthcare that w
 ---
 
 ## 🧠 Architecture
+![Architecture Diagram(detailed)](https://raw.githubusercontent.com/kunal0297/SmartClinicalCopilot/main/image.png)
 
 ```mermaid
 graph TD
