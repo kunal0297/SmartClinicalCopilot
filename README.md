@@ -1,6 +1,6 @@
-# 🧠 Smart Clinical Copilot – AI-Enhanced FHIR Healthcare Assistant
+#  Smart Clinical Copilot – AI-Enhanced FHIR Healthcare Assistant
 
-> 🏆 Built for the InterSystems Clinical Interoperability Contest 2025 — transforming clinical data into life-saving insights with real-time AI intelligence.
+
 
 ---
 
@@ -17,19 +17,19 @@ This isn’t just a project — it's a vision for AI-augmented healthcare that w
 
 ---
 
-## 🎯 Key Features
+##  Key Features
 
-| 🔍 Feature                 | ⚙️ Description                                               |
+|  Feature                 | ⚙️ Description                                               |
 | -------------------------- | ------------------------------------------------------------ |
-| 🧬 FHIR Parsing            | Deep parsing of patient conditions, encounters, observations |
-| 💡 GPT-Powered Summarizer  | Context-aware summaries of clinical history                  |
-| ⚠️ Drug & Allergy Checker  | Real-time alerts from medication and allergy profiles        |
-| 🧠 Intelligent Suggestions | Suggests labs, imaging, or follow-ups                        |
-| 📊 Visual UI               | Fast, focused web dashboard for clinicians                   |
+|  FHIR Parsing            | Deep parsing of patient conditions, encounters, observations |
+|  GPT-Powered Summarizer  | Context-aware summaries of clinical history                  |
+|  Drug & Allergy Checker  | Real-time alerts from medication and allergy profiles        |
+|  Intelligent Suggestions | Suggests labs, imaging, or follow-ups                        |
+|  Visual UI               | Fast, focused web dashboard for clinicians                   |
 
 ---
 
-## 🌐 Tech Stack & APIs
+##  Tech Stack & APIs
 
 | Layer       | Technologies                           |
 | ----------- | -------------------------------------- |
@@ -41,7 +41,7 @@ This isn’t just a project — it's a vision for AI-augmented healthcare that w
 
 ---
 
-## 🧠 Architecture
+##  Architecture
 ![Architecture Diagram(detailed)](https://raw.githubusercontent.com/kunal0297/SmartClinicalCopilot/main/image.png)
 
 ```mermaid
@@ -59,7 +59,7 @@ graph TD
 
 ---
 
-## 🧪 Sample Flow
+##  Sample Flow
 
 ### Input (FHIR Data Extract):
 
@@ -76,29 +76,29 @@ graph TD
 
 ### Output (Copilot Response):
 
-* ✅ Chronic condition detected: Hypertension
-* ⚠️ Missing labs: No recent renal function or BP data
-* 📊 Medication: Lisinopril — check potassium levels
-* 🧠 Suggested actions: Order CBC, ECG; monitor BP trends
+*  Chronic condition detected: Hypertension
+*  Missing labs: No recent renal function or BP data
+*  Medication: Lisinopril — check potassium levels
+*  Suggested actions: Order CBC, ECG; monitor BP trends
 
 ---
 
-## 🧠 AI Modules in Action
+##  AI Modules in Action
 
 | Module                    | Description                                     |
 | ------------------------- | ----------------------------------------------- |
 | 🗌 Clinical Summarizer    | Highlights relevant history in seconds          |
-| 🔬 Diagnostic Agent       | Suggests labs or imaging tests                  |
-| ❌ Risk Checker            | Flags allergies, med conflicts, abnormal vitals |
-| 📌 Encounter Reviewer     | Connects encounter timelines, symptoms, labs    |
-| 💬 Conversational Copilot | Future-ready chat-based medical assistant       |
+|  Diagnostic Agent       | Suggests labs or imaging tests                  |
+|  Risk Checker            | Flags allergies, med conflicts, abnormal vitals |
+|  Encounter Reviewer     | Connects encounter timelines, symptoms, labs    |
+|  Conversational Copilot | Future-ready chat-based medical assistant       |
 
 ---
 
 
-## 🎮 Demo Video
+##  Demo Video
 
-> 🎥 Watch Smart Clinical Copilot in action:
+>  Watch Smart Clinical Copilot in action:
 
 [![Demo Video](https://img.shields.io/badge/Watch%20Demo-%F0%9F%8E%A5-blue?style=for-the-badge)](./demo.mp4)
 
@@ -106,9 +106,9 @@ graph TD
 
 ---
 
-## ⚙️ Quickstart
+##  Quickstart
 
-### 📦 Docker (Recommended)
+###  Docker (Recommended)
 
 ```bash
 git clone https://github.com/kunal0297/SmartClinicalCopilot.git
@@ -134,13 +134,13 @@ npm run dev
 
 ---
 
-## 🌍 Real-World Use Cases
+##  Real-World Use Cases
 
-* 🚑 Emergency Room triage support
-* 🧠 Neurology - follow-up safety alerts
-* 💊 Drug dosing checks in elderly patients
-* 🏥 Chronic disease dashboards (diabetes, CHF)
-* 📚 Clinical research data filtering (e.g., trial matching)
+*  Emergency Room triage support
+*  Neurology - follow-up safety alerts
+*  Drug dosing checks in elderly patients
+*  Chronic disease dashboards (diabetes, CHF)
+*  Clinical research data filtering (e.g., trial matching)
 
 ---
 
@@ -150,13 +150,13 @@ npm run dev
 
 Upcoming:
 
-* 🔮 Integration with voice (Whisper + GPT)
-* 📜 Audit trails and explainability logs
-* ⚙️ Custom scoring for condition severity
+*  Integration with voice (Whisper + GPT)
+*  Audit trails and explainability logs
+*  Custom scoring for condition severity
 
 ---
 
-## 📚 Resources
+##  Resources
 
 * [FHIR Overview (HL7)](https://www.hl7.org/fhir/overview.html)
 * [LangChain AI Agents](https://docs.langchain.com/)
@@ -164,7 +164,7 @@ Upcoming:
 
 ---
 
-## 🗞️ License
+##  License
 
 MIT — see [LICENSE](./LICENSE)
 
