@@ -217,4 +217,53 @@ cache:
   db: 0
   default_ttl: 3600  # seconds
   max_size: 1000
-  cleanup_interval: 300  # seconds 
+  cleanup_interval: 300  # seconds
+
+# Local LLM Configuration
+local_llm:
+  enabled: true
+  primary_model: "mistral"
+  fallback_models:
+    - "llama2"
+    - "gpt2"
+  model_configs:
+    mistral:
+      max_length: 2048
+      temperature: 0.7
+      top_p: 0.9
+      repetition_penalty: 1.1
+    llama2:
+      max_length: 4096
+      temperature: 0.8
+      top_p: 0.95
+      repetition_penalty: 1.2
+  cache:
+    enabled: true
+    ttl: 3600
+  metrics:
+    enabled: true
+    collection_interval: 60
+
+# IRIS Database Configuration
+iris_database:
+  enabled: true
+  primary:
+    hostname: "localhost"
+    port: 51773
+    namespace: "USER"
+    username: "_SYSTEM"
+    password: "SYS"
+    connection_timeout: 30
+  pool:
+    min_size: 2
+    max_size: 10
+    idle_timeout: 300
+  retry:
+    max_attempts: 3
+    delay: 2
+  cache:
+    enabled: true
+    default_ttl: 300
+  monitoring:
+    enabled: true
+    slow_query_threshold: 5

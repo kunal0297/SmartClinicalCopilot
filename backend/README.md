@@ -14,6 +14,8 @@ The backend service for the Smart Clinical Copilot configuration management syst
 - Performance monitoring
 
 ### Advanced Features
+- Local LLM Integration with fallback support
+- IRIS Database Integration
 - Redis caching
 - Prometheus metrics
 - Background tasks
@@ -22,11 +24,28 @@ The backend service for the Smart Clinical Copilot configuration management syst
 - Database migrations
 - API documentation
 
+### LLM Features
+- Multiple model support (Mistral, Llama2)
+- Automatic fallback mechanisms
+- Response caching
+- Performance metrics
+- Configurable parameters
+- Local inference optimization
+
+### IRIS Integration
+- Direct table access
+- Connection pooling
+- Query caching
+- Transaction support
+- Performance monitoring
+- Error recovery
+
 ## Technology Stack
 
 - **Python**: Core programming language
 - **FastAPI**: Web framework
 - **SQLAlchemy**: Database ORM
+- **IRIS**: Healthcare database
 - **Redis**: Caching
 - **Prometheus**: Metrics
 - **Alembic**: Database migrations
@@ -34,6 +53,9 @@ The backend service for the Smart Clinical Copilot configuration management syst
 - **PyJWT**: Authentication
 - **Cryptography**: Encryption
 - **Pytest**: Testing
+- **Transformers**: Local LLM support
+- **Torch**: ML framework
+- **Ollama**: Local LLM runtime
 
 ## Project Structure
 
@@ -344,4 +366,4 @@ class AuditLog(Base):
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
