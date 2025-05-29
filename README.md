@@ -36,13 +36,34 @@ The system consists of the following components:
 
 ```mermaid
 graph TD
-    A[Frontend] --> B[Backend API]
-    B --> C[FHIR Server]
-    B --> D[IRIS]
-    B --> E[Database]
-    B --> F[Rule Engine]
-    F --> G[Alert System]
-    B --> H[Monitoring]
+    A[User<br>External Actor] --> B[Web Frontend]
+    B --> C[Copilot Backend<br>Python/FastAPI]
+    B --> D[Django Admin & API<br>Python/Django]
+
+    B -- "Requests data from" --> C
+    D -- "Requests data from" --> E[Database APIs<br>PostgreSQL, Redis, etc.]
+    D -- "Uses ORM for" --> E
+
+    B -- "Initializes" --> F[UI Entry Point<br>TypeScript/React]
+    F -- "Initializes" --> G[App Shell<br>TypeScript/React]
+    G -- "Manages" --> H[UI Pages<br>TSX/React Directory]
+    H -- "Uses" --> I[UI Components<br>TSX/React Directory]
+    H -- "Calls" --> J[Frontend API Client<br>TypeScript]
+    J -- "Requests data from" --> C
+
+    C -- "Uses" --> K[Rules Engine<br>Python Code]
+    C -- "Accesses" --> L[FHIR Client<br>Python Code]
+    L -- "Communicates with" --> M[External Systems<br>FHIR APIs, InterSystems IRIS, etc.]
+    C -- "Invokes" --> N[Monitoring Services<br>Python Code Directory]
+    C -- "Reads config from" --> O[Configuration Management<br>Python Code Directory]
+    O -- "Manages Uses" --> O
+    C -- "Invokes" --> P[LLM Service<br>Python Code]
+    P -- "Communicates with" --> Q[External Systems<br>OpenAI, Ollama, etc.]
+
+    D -- "Handles commands &<br>delegates HTTP to" --> R[URL Configuration<br>Python/Django]
+    R -- "Routes to" --> S[Core Business Logic<br>Python/Django Directory]
+    D -- "Loads" --> T[Application Settings<br>Python/Django]
+
 ```
 
 </div>
