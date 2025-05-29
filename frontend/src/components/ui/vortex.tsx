@@ -1,5 +1,5 @@
 // Remove unused imports and variables
-import { cn } from '../../lib/utils';
+import { cn } from "../../../lib/utils";
 
 // Remove unused constants
 const HALF_PI = Math.PI / 2;
