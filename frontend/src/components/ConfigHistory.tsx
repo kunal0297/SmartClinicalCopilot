@@ -37,22 +37,33 @@ interface ConfigHistoryProps {
   }>;
 }
 
+// Add ConfigValue type definition at the top
+interface ConfigValue {
+  key: string;
+  value: any;
+  timestamp: string;
+  user: string;
+  action: string;
+}
+
 const ConfigHistory: React.FC<ConfigHistoryProps> = ({ open, onClose, history }) => {
   const theme = useTheme();
-  const [selectedEntry, setSelectedEntry] = useState<any>(null);
+  const [selectedEntry, setSelectedEntry] = useState<ConfigValue | null>(null);
   const [showDiff, setShowDiff] = useState(false);
 
-  const handleRestore = (entry: any) => {
-    // Implement restore functionality
+  const handleRestore = (entry: ConfigValue) => {
+    // Implementation
+    console.log('Restoring:', entry);
+  };
+  
+  const handleDelete = (entry: ConfigValue) => {
+    // Implementation
+    console.log('Deleting:', entry);
   };
 
   const handleCompare = (entry: any) => {
     setSelectedEntry(entry);
     setShowDiff(true);
-  };
-
-  const handleDelete = (entry: any) => {
-    // Implement delete functionality
   };
 
   const getActionColor = (action: string) => {
@@ -185,4 +196,4 @@ const ConfigHistory: React.FC<ConfigHistoryProps> = ({ open, onClose, history })
   );
 };
 
-export default ConfigHistory; 
+export default ConfigHistory;

@@ -454,6 +454,38 @@ async def cohort_analytics():
         logger.error(f"Error in cohort_analytics: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/patient-summary/{patient_id}")
+async def generate_patient_summary(patient_id: str):
+    """
+    Generate a comprehensive medical summary for a patient using AI.
+    The summary is generated based on data from IRIS server and can use either
+    local LLM or OpenAI depending on configuration.
+    """
+    try:
+        summary = await llm_explainer.generate_patient_summary(patient_id)
+        return summary
+    except Exception as e:
+        logger.error(f"Error generating patient summary: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate patient summary: {str(e)}"
+        )
+
+@app.get("/patient-summaries/{patient_id}")
+async def get_patient_summaries(patient_id: str):
+    """
+    Retrieve all stored AI-generated summaries for a patient.
+    """
+    try:
+        summaries = await llm_explainer.iris_client.get_patient_summaries(patient_id)
+        return summaries
+    except Exception as e:
+        logger.error(f"Error retrieving patient summaries: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve patient summaries: {str(e)}"
+        )
+
 # Helper functions
 def _check_lab_condition(observation: Any, condition: Dict[str, Any]) -> bool:
     """Check if a lab observation meets a condition"""

@@ -1,3 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26">
+  <Document name="smart-clinical-copilot.ZPM">
+    <Module>
+      <Name>smart-clinical-copilot</Name>
+      <Version>1.0.0</Version>
+      <Description>AI-powered FHIR assistant with LLM explainability, self-healing rules engine, and React dashboard UI.</Description>
+      <Keywords>fhir,ai,llm,clinical</Keywords>
+      <Author>
+        <Person>Kunal Pandey</Person>
+        <Organization>Independent</Organization>
+        <CopyrightDate>2024</CopyrightDate>
+        <License>MIT</License>
+      </Author>
+      <Dependencies>
+        <ModuleReference>
+          <Name>fhir-server</Name>
+          <Version>*</Version>
+        </ModuleReference>
+      </Dependencies>
+      <SystemRequirements Version=">=2024.1" />
+    </Module>
+  </Document>
+</Export>
 <Manifest>
   <Name>smart-clinical-copilot</Name>
   <Version>1.0.0</Version>

@@ -3,7 +3,8 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
-import React, { useMemo, useState } from 'react';
+// Remove React import since it's not directly used
+import { useMemo, useState } from 'react';
 import Home from './pages/Home';
 import Patients from './pages/Patients';
 import Rules from './pages/Rules';

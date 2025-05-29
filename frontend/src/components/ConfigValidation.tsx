@@ -13,13 +13,10 @@ import {
   ListItemIcon,
   ListItemText,
   ListItemSecondaryAction,
-  IconButton,
-  Tooltip,
   Chip,
   Divider,
   useTheme,
   Alert,
-  CircularProgress,
   TextField,
   MenuItem,
   Select,
@@ -31,10 +28,8 @@ import {
   Error as ErrorIcon,
   Warning as WarningIcon,
   Info as InfoIcon,
-  Refresh as RefreshIcon,
   Save as SaveIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 
 interface ValidationRule {
@@ -151,13 +146,19 @@ const ConfigValidation: React.FC<ConfigValidationProps> = ({
     >
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Typography variant="h6">Configuration Validation</Typography>
+          <Typography variant="h6">
+            <WarningIcon color="warning" sx={{ mr: 1 }} />
+            Configuration Validation
+            {isValidating && ' (Validating...)'}
+          </Typography>
           <Box>
-            <Tooltip title="Refresh Validation">
-              <IconButton onClick={handleValidate} disabled={isValidating}>
-                {isValidating ? <CircularProgress size={24} /> : <RefreshIcon />}
-              </IconButton>
-            </Tooltip>
+            <Button 
+              onClick={handleValidate} 
+              disabled={isValidating}
+              startIcon={<InfoIcon />}
+            >
+              Validate
+            </Button>
             <Button onClick={onClose} color="inherit">
               Close
             </Button>

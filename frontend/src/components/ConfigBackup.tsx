@@ -20,14 +20,12 @@ import {
   CircularProgress,
   useTheme
 } from '@mui/material';
-import {
-  Backup as BackupIcon,
-  Restore as RestoreIcon,
-  Delete as DeleteIcon,
-  Download as DownloadIcon,
-  Upload as UploadIcon,
-  Schedule as ScheduleIcon
-} from '@mui/icons-material';
+// Remove unused imports
+// Import icons correctly
+import BackupIcon from '@mui/icons-material/Backup';
+import RestoreIcon from '@mui/icons-material/Restore';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DownloadIcon from '@mui/icons-material/Download';
 import { format } from 'date-fns';
 
 interface ConfigBackupProps {
@@ -280,4 +278,4 @@ const ConfigBackup: React.FC<ConfigBackupProps> = ({
   );
 };
 
-export default ConfigBackup; 
+export default ConfigBackup;

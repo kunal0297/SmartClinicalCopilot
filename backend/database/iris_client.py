@@ -4,10 +4,33 @@ from datetime import datetime
 import iris
 from ..metrics.metrics_manager import MetricsManager
 from ..cache_manager import CacheManager
+from connection_pool import ConnectionPool
 
 logger = logging.getLogger(__name__)
 
+# Add connection pooling and health checks
 class IRISClient:
+    def __init__(self, connection_config: Dict[str, str]):
+        self.pool = ConnectionPool(
+            min_size=5,
+            max_size=20,
+            connection_timeout=30
+        )
+
+    async def health_check(self) -> Dict[str, Any]:
+        try:
+            start_time = time.time()
+            await self.execute_query("SELECT 1")
+            return {
+                "status": "healthy",
+                "latency": time.time() - start_time
+            }
+        except Exception as e:
+            return {
+                "status": "unhealthy",
+                "error": str(e)
+            }
+
     def __init__(self, connection_config: Dict[str, str]):
         self.config = connection_config
         self.connection = None

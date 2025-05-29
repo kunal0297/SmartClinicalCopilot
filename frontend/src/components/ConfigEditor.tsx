@@ -1,98 +1,89 @@
 import React, { useState } from 'react';
+import Editor from '@monaco-editor/react';
 import {
   Box,
   Paper,
   Typography,
   TextField,
-  Button,
   IconButton,
   Tooltip,
   Grid,
-  Chip,
-  Divider,
   List,
   ListItem,
   ListItemText,
   ListItemSecondaryAction,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   useTheme,
-  alpha
+  Button,
+  Divider,
+  Chip
 } from '@mui/material';
 import {
-  Add as AddIcon,
-  Delete as DeleteIcon,
   Edit as EditIcon,
   Visibility as VisibilityIcon,
   VisibilityOff as VisibilityOffIcon,
   Code as CodeIcon,
-  Description as DescriptionIcon,
   Security as SecurityIcon
 } from '@mui/icons-material';
-import { styled } from '@mui/material/styles';
-import { ConfigValue } from '../types/config';
-import MonacoEditor from '@monaco-editor/react';
-
-const StyledPaper = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(2),
-  borderRadius: theme.shape.borderRadius * 2,
-  boxShadow: theme.shadows[2],
-  '&:hover': {
-    boxShadow: theme.shadows[4],
-  },
-}));
+import type { Config } from '../types/config';
 
 interface ConfigEditorProps {
-  config: any;
-  onSave: () => void;
-  onRefresh: () => void;
+  config: Config;
+  onSave: (config: Config) => Promise<void>;
 }
 
-const ConfigEditor: React.FC<ConfigEditorProps> = ({ config, onSave, onRefresh }) => {
+const ConfigEditor: React.FC<ConfigEditorProps> = ({ config, onSave }) => {
   const theme = useTheme();
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showValue, setShowValue] = useState<Record<string, boolean>>({});
-  const [searchQuery, setSearchQuery] = useState('');
   const [editorValue, setEditorValue] = useState('');
+
+  const filteredKeys = Object.keys(config.values).filter(key =>
+    key.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleKeySelect = (key: string) => {
     setSelectedKey(key);
-    setEditorValue(JSON.stringify(config.values[key], null, 2));
-  };
-
-  const handleValueChange = (value: string) => {
-    setEditorValue(value);
-  };
-
-  const handleSave = () => {
-    try {
-      const newValue = JSON.parse(editorValue);
-      // Update config value
-      onSave();
-      setIsEditing(false);
-    } catch (error) {
-      // Handle JSON parse error
-    }
+    setEditorValue(JSON.stringify(config.values[key].value, null, 2));
   };
 
   const handleToggleVisibility = (key: string) => {
-    setShowValue((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+    setShowValue(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const filteredKeys = Object.keys(config.values).filter((key) =>
-    key.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleValueChange = (value: string | undefined) => {
+    if (value !== undefined) {
+      setEditorValue(value);
+    }
+  };
+
+  const handleSave = async () => {
+    if (selectedKey) {
+      try {
+        const parsedValue = JSON.parse(editorValue);
+        const updatedConfig = {
+          ...config,
+          values: {
+            ...config.values,
+            [selectedKey]: {
+              ...config.values[selectedKey],
+              value: parsedValue
+            }
+          }
+        };
+        await onSave(updatedConfig);
+        setIsEditing(false);
+      } catch (error) {
+        console.error('Invalid JSON:', error);
+      }
+    }
+  };
 
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={4}>
-        <StyledPaper>
+        <Paper>
           <Box mb={2}>
             <TextField
               fullWidth
@@ -113,9 +104,7 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ config, onSave, onRefresh }
               >
                 <ListItemText
                   primary={key}
-                  secondary={
-                    config.values[key].description || 'No description available'
-                  }
+                  secondary={config.values[key].description || 'No description available'}
                 />
                 <ListItemSecondaryAction>
                   <Tooltip title="Toggle visibility">
@@ -130,10 +119,10 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ config, onSave, onRefresh }
               </ListItem>
             ))}
           </List>
-        </StyledPaper>
+        </Paper>
       </Grid>
       <Grid item xs={12} md={8}>
-        <StyledPaper>
+        <Paper>
           {selectedKey ? (
             <>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
@@ -183,7 +172,7 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ config, onSave, onRefresh }
               <Divider sx={{ my: 2 }} />
               {isEditing ? (
                 <Box>
-                  <MonacoEditor
+                  <Editor
                     height="400px"
                     language="json"
                     theme={theme.palette.mode === 'dark' ? 'vs-dark' : 'light'}
@@ -231,10 +220,10 @@ const ConfigEditor: React.FC<ConfigEditorProps> = ({ config, onSave, onRefresh }
               </Typography>
             </Box>
           )}
-        </StyledPaper>
+        </Paper>
       </Grid>
     </Grid>
   );
 };
 
-export default ConfigEditor; 
+export default ConfigEditor;

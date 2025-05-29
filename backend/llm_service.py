@@ -1,12 +1,14 @@
 import os
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional, Union, AsyncGenerator
 import logging
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 import torch
 import ollama
+from datetime import datetime
 from .models import RuleMatch
 from .metrics.metrics_manager import MetricsManager
 from .cache_manager import CacheManager
+from .iris_client import IRISClient  # New import for IRIS integration
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +22,7 @@ class LLMService:
         self.pipeline = None
         self.metrics_manager = MetricsManager()
         self.cache_manager = CacheManager()
+        self.iris_client = IRISClient()  # Initialize IRIS client
         self.model_configs = self._load_model_configs()
         
         if self.use_local_model:
@@ -38,36 +41,37 @@ class LLMService:
                 "temperature": 0.8,
                 "top_p": 0.95,
                 "repetition_penalty": 1.2
+            },
+            "meditron": {  # Added medical-specific model
+                "max_length": 4096,
+                "temperature": 0.6,
+                "top_p": 0.9,
+                "repetition_penalty": 1.1
             }
         }
 
-    def _initialize_local_model(self):
+    async def _initialize_local_model(self):
+        """Initialize local model with better error handling and model selection"""
         try:
-            # Try Ollama with fallback mechanism
-            for model in [self.ollama_model, "llama2", "mistral"]:
-                try:
-                    ollama.pull(model)
-                    logger.info(f"Ollama model {model} loaded successfully")
-                    return
-                except Exception as e:
-                    logger.warning(f"Failed to load Ollama model {model}: {str(e)}")
-
-            # HuggingFace fallback with optimizations
-            model_name = "mistralai/Mistral-7B-v0.1"
+            model_name = os.getenv("LOCAL_MODEL_NAME", "mistralai/Mistral-7B-v0.1")
+            
+            # Load tokenizer first
             self.local_tokenizer = AutoTokenizer.from_pretrained(
                 model_name,
-                use_fast=True,
-                cache_dir="./models"
+                trust_remote_code=True
             )
+            
+            # Load model with optimized settings
             self.local_model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 torch_dtype=torch.float16,
+                load_in_8bit=True,
                 device_map="auto",
                 low_cpu_mem_usage=True,
-                cache_dir="./models"
+                trust_remote_code=True
             )
             
-            # Initialize optimized pipeline
+            # Initialize pipeline for easier inference
             self.pipeline = pipeline(
                 "text-generation",
                 model=self.local_model,
@@ -75,9 +79,122 @@ class LLMService:
                 device_map="auto"
             )
             
-            logger.info("HuggingFace model loaded successfully with optimizations")
+            logger.info(f"Successfully loaded local model: {model_name}")
+            
         except Exception as e:
             logger.error(f"Critical error loading local LLM model: {str(e)}")
+            raise
+
+    async def generate_patient_summary(self, patient_id: str) -> Dict[str, Any]:
+        """Generate a comprehensive patient summary using local LLM and IRIS data"""
+        try:
+            # Fetch patient data from IRIS
+            patient_data = await self.iris_client.get_patient_data(patient_id)
+            
+            # Create a detailed prompt for the summary
+            prompt = self._create_patient_summary_prompt(patient_data)
+            
+            # Generate summary using local model
+            if self.use_local_model:
+                summary = await self._generate_local_summary(prompt)
+            else:
+                summary = await self._generate_openai_summary(prompt)
+            
+            # Store the summary in IRIS
+            await self.iris_client.store_patient_summary(patient_id, summary)
+            
+            return {
+                "patient_id": patient_id,
+                "summary": summary,
+                "generated_at": datetime.now().isoformat(),
+                "model": "local" if self.use_local_model else "openai"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating patient summary: {str(e)}")
+            raise
+
+    def _create_patient_summary_prompt(self, patient_data: Dict[str, Any]) -> str:
+        """Create a detailed prompt for patient summary generation"""
+        return f"""
+        Please provide a comprehensive medical summary for the following patient:
+
+        Patient Information:
+        - ID: {patient_data.get('id')}
+        - Age: {patient_data.get('age')}
+        - Gender: {patient_data.get('gender')}
+        
+        Medical History:
+        {patient_data.get('medical_history', '')}
+        
+        Current Medications:
+        {patient_data.get('medications', '')}
+        
+        Recent Lab Results:
+        {patient_data.get('lab_results', '')}
+        
+        Recent Diagnoses:
+        {patient_data.get('diagnoses', '')}
+        
+        Please provide a structured summary that includes:
+        1. Key medical conditions and their status
+        2. Current treatment plan
+        3. Recent significant findings
+        4. Potential risk factors
+        5. Recommended follow-up actions
+        
+        Summary:
+        """
+
+    async def _generate_local_summary(self, prompt: str) -> str:
+        """Generate summary using local LLM"""
+        try:
+            if self.pipeline:
+                # Use pipeline for more efficient generation
+                outputs = self.pipeline(
+                    prompt,
+                    max_length=1000,
+                    num_return_sequences=1,
+                    temperature=0.7,
+                    do_sample=True
+                )
+                return outputs[0]['generated_text']
+            else:
+                # Fallback to direct model generation
+                inputs = self.local_tokenizer(prompt, return_tensors="pt").to(self.local_model.device)
+                with torch.no_grad():
+                    outputs = self.local_model.generate(
+                        **inputs,
+                        max_length=1000,
+                        num_return_sequences=1,
+                        temperature=0.7,
+                        do_sample=True
+                    )
+                return self.local_tokenizer.decode(outputs[0], skip_special_tokens=True)
+                
+        except Exception as e:
+            logger.error(f"Error with local LLM summary generation: {str(e)}")
+            raise
+
+    async def _generate_openai_summary(self, prompt: str) -> str:
+        """Generate summary using OpenAI API"""
+        try:
+            import openai
+            
+            response = await openai.ChatCompletion.acreate(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are a medical summarization system. Provide clear, concise, and accurate summaries of patient medical information."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=1000
+            )
+            
+            return response.choices[0].message.content
+            
+        except Exception as e:
+            logger.error(f"Error with OpenAI API: {str(e)}")
             raise
 
     async def generate_explanations(

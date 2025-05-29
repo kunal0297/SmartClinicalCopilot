@@ -107,7 +107,11 @@ export default function CohortAnalytics() {
                     label
                   >
                     {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={COLORS[index % COLORS.length]}
+                        name={entry.name}
+                      />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -121,7 +125,7 @@ export default function CohortAnalytics() {
         {/* Summary Cards */}
         <MuiGrid item xs={12}>
           <MuiGrid container spacing={2}>
-            {chartData.map((item, index) => (
+            {chartData.map((item) => (
               <MuiGrid item xs={12} sm={6} md={3} key={item.name}>
                 <Paper
                   sx={{

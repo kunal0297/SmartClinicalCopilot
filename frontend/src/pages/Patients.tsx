@@ -100,9 +100,12 @@ export default function Patients() {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Patients
-      </Typography>
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Typography variant="h4">Patients</Typography>
+        </Grid>
+        {/* Add more grid items as needed */}
+      </Grid>
 
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>

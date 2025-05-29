@@ -44,9 +44,10 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - /app/dist
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
-      - REACT_APP_FHIR_SERVER_URL=http://localhost:8080/fhir
+      - VITE_API_URL=http://localhost:8000
+      - VITE_FHIR_SERVER_URL=http://localhost:8080/fhir
     depends_on:
       - backend
 
@@ -60,6 +61,11 @@ services:
       - POSTGRES_DB=clinical_copilot
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   fhir-server:
     image: hapiproject/hapi:latest
@@ -69,9 +75,20 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/clinical_copilot
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_PROFILES_ACTIVE=postgres
+      - HAPI_FHIR_FHIR_VERSION=R4
+      - HAPI_FHIR_SERVER_URL=http://localhost:8080/fhir
+      - HAPI_FHIR_SERVER_PATH=/fhir
+      - HAPI_FHIR_SERVER_CORS_ENABLED=true
+      - HAPI_FHIR_SERVER_CORS_ALLOWED_ORIGIN=*
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   iris_data:
-  postgres_data: 
+  postgres_data:

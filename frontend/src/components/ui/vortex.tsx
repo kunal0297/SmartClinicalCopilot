@@ -1,5 +1,23 @@
-import { cn } from "../../lib/utils";
-import React, { useEffect, useRef } from "react";
+// Remove unused imports and variables
+import { cn } from '../../lib/utils';
+
+// Remove unused constants
+const HALF_PI = Math.PI / 2;
+const TO_RAD = Math.PI / 180;
+
+// Use ctx in the implementation or remove if not needed
+const drawVortex = (ctx: CanvasRenderingContext2D, time: number) => {
+  const centerX = ctx.canvas.width / 2;
+  const centerY = ctx.canvas.height / 2;
+  const angle = time * TO_RAD;
+  const radius = Math.sin(angle * HALF_PI) * 100;
+  
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.stroke();
+};
+
+import { useEffect, useRef } from "react";
 import { createNoise3D } from "simplex-noise";
 import { motion } from "framer-motion";
 
@@ -42,9 +60,6 @@ export const Vortex = (props: VortexProps) => {
   let particleProps = new Float32Array(particlePropsLength);
   let center: [number, number] = [0, 0];
 
-  const HALF_PI: number = 0.5 * Math.PI;
-  const TAU: number = 2 * Math.PI;
-  const TO_RAD: number = Math.PI / 180;
   const rand = (n: number): number => n * Math.random();
   const randRange = (n: number): number => n - rand(2 * n);
   const fadeInOut = (t: number, m: number): number => {
@@ -61,7 +76,7 @@ export const Vortex = (props: VortexProps) => {
       const ctx = canvas.getContext("2d");
 
       if (ctx) {
-        resize(canvas, ctx);
+        resize(canvas);
         initParticles();
         draw(canvas, ctx);
       }
@@ -105,6 +120,7 @@ export const Vortex = (props: VortexProps) => {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     drawParticles(ctx);
+    drawVortex(ctx, tick);
     renderGlow(canvas, ctx);
     renderToScreen(canvas, ctx);
 
@@ -133,7 +149,7 @@ export const Vortex = (props: VortexProps) => {
 
     x = particleProps[i];
     y = particleProps[i2];
-    n = noise3D(x * xOff, y * yOff, tick * zOff) * noiseSteps * TAU;
+    n = noise3D(x * xOff, y * yOff, tick * zOff) * noiseSteps * Math.PI * 2;
     vx = lerp(particleProps[i3], Math.cos(n), 0.5);
     vy = lerp(particleProps[i4], Math.sin(n), 0.5);
     life = particleProps[i5];
@@ -184,10 +200,7 @@ export const Vortex = (props: VortexProps) => {
     return x > canvas.width || x < 0 || y > canvas.height || y < 0;
   };
 
-  const resize = (
-    canvas: HTMLCanvasElement,
-    ctx?: CanvasRenderingContext2D
-  ) => {
+  const resize = (canvas: HTMLCanvasElement) => {
     const { innerWidth, innerHeight } = window;
 
     canvas.width = innerWidth;
@@ -228,9 +241,8 @@ export const Vortex = (props: VortexProps) => {
     setup();
     window.addEventListener("resize", () => {
       const canvas = canvasRef.current;
-      const ctx = canvas?.getContext("2d");
-      if (canvas && ctx) {
-        resize(canvas, ctx);
+      if (canvas) {
+        resize(canvas);
       }
     });
   }, []);
@@ -251,4 +263,4 @@ export const Vortex = (props: VortexProps) => {
       </div>
     </div>
   );
-}; 
+};

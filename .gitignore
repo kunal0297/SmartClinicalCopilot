@@ -19,49 +19,65 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-
-# Virtual Environment
-venv/
-env/
-ENV/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-.DS_Store
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Environment variables
 .env
-.env.local
-.env.*.local
-
-# Testing
-.coverage
-htmlcov/
-.pytest_cache/
-.tox/
-
-# Distribution
-dist/
-build/
-
-# Redis
-dump.rdb
+.venv
+env/
+venv/
+ENV/
 
 # Node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.next/
+out/
+build/
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+
+# Docker
+.docker/
+
+# Logs
+logs/
+*.log
+
+# Database
+*.sqlite3
+*.db
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Redis
+*.rdb
+
+# IRIS
+iris/iris-startup/SamplePatients/
+
+# Redis
+dump.rdb
 
 # Frontend
 frontend/dist/
@@ -79,13 +95,9 @@ backend/logs/
 backend/data/
 backend/cache/
 
-# Database
-*.sqlite3
-*.db
-
 # Temporary files
 *.tmp
 *.temp
 *.bak
 *.swp
-*~ 
+*~

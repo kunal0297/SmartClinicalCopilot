@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { HoverEffect } from '../components/HoverEffect';
 import type { HoverEffectItem } from '../components/HoverEffect';
 import { Box, Typography, MenuItem, Select, FormControl, InputLabel, CircularProgress } from '@mui/material';

@@ -1,247 +1,141 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Paper,
-  Typography,
   Tabs,
   Tab,
-  Button,
-  IconButton,
-  Tooltip,
-  useTheme,
-  Alert,
+  Paper,
   CircularProgress,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Divider,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  ListItemSecondaryAction,
-  Chip
+  Alert
 } from '@mui/material';
-import {
-  Settings as SettingsIcon,
-  Security as SecurityIcon,
-  Description as DescriptionIcon,
-  FileUpload as FileUploadIcon,
-  Assessment as AssessmentIcon,
-  Refresh as RefreshIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Save as SaveIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Warning as WarningIcon
-} from '@mui/icons-material';
+import type { Config, Template } from '../types/config';
 import ConfigEditor from './ConfigEditor';
 import ConfigSecurity from './ConfigSecurity';
 import ConfigTemplate from './ConfigTemplate';
 import ConfigValidation from './ConfigValidation';
-import ConfigImportExport from './ConfigImportExport';
 import ConfigStats from './ConfigStats';
 
+interface ValidationRule {
+  id: string;
+  name: string;
+  description: string;
+  type: 'required' | 'format' | 'range' | 'custom';
+  status: 'active' | 'inactive';
+  severity: 'error' | 'warning' | 'info';
+  validation: string;
+}
+
+interface ValidationResult {
+  ruleId: string;
+  status: 'pass' | 'fail';
+  message: string;
+  timestamp: string;
+}
+
 interface ConfigManagerProps {
-  onSave: (config: any) => Promise<void>;
-  onLoad: () => Promise<any>;
-  onValidate: (config: any) => Promise<any>;
+  onSaveConfig: (config: Config) => Promise<void>;
   onEncrypt: (value: string) => Promise<string>;
   onDecrypt: (value: string) => Promise<string>;
-  onImport: (file: File) => Promise<void>;
-  onExport: (config: any) => Promise<void>;
-  onDelete: (configId: string) => Promise<void>;
-  onSaveTemplate: (template: any) => Promise<void>;
+  onSaveTemplate: (template: Template) => Promise<void>;
   onDeleteTemplate: (templateId: string) => Promise<void>;
   onApplyTemplate: (templateId: string, variables: Record<string, string>) => Promise<any>;
-  onSaveRule: (rule: any) => Promise<void>;
+  onValidate: (config: Config) => Promise<ValidationResult[]>;
+  onSaveRule: (rule: ValidationRule) => Promise<void>;
   onDeleteRule: (ruleId: string) => Promise<void>;
-  configs: any[];
-  templates: any[];
-  rules: any[];
-  stats: any;
+  configs: Config[];
+  templates: Template[];
+  rules: ValidationRule[];
+  results: ValidationResult[];
 }
 
 const ConfigManager: React.FC<ConfigManagerProps> = ({
-  onSave,
-  onLoad,
-  onValidate,
+  onSaveConfig,
   onEncrypt,
   onDecrypt,
-  onImport,
-  onExport,
-  onDelete,
   onSaveTemplate,
   onDeleteTemplate,
   onApplyTemplate,
+  onValidate,
   onSaveRule,
   onDeleteRule,
   configs,
   templates,
   rules,
-  stats
+  results
 }) => {
-  const theme = useTheme();
   const [activeTab, setActiveTab] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showSecurity, setShowSecurity] = useState(false);
-  const [showTemplate, setShowTemplate] = useState(false);
-  const [showValidation, setShowValidation] = useState(false);
-  const [showImportExport, setShowImportExport] = useState(false);
-  const [showStats, setShowStats] = useState(false);
+  const [selectedConfig, setSelectedConfig] = useState<Config | null>(null);
+  const [validationRules, setValidationRules] = useState<ValidationRule[]>(rules);
+  const [validationResults, setValidationResults] = useState<ValidationResult[]>(results);
 
   useEffect(() => {
-    loadConfigs();
-  }, []);
-
-  const loadConfigs = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      await onLoad();
-    } catch (err) {
-      setError('Failed to load configurations');
-    } finally {
-      setIsLoading(false);
+    if (configs.length > 0) {
+      setSelectedConfig(configs[0]);
     }
-  };
+  }, [configs]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setActiveTab(newValue);
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircleIcon color="success" />;
-      case 'error':
-        return <ErrorIcon color="error" />;
-      case 'warning':
-        return <WarningIcon color="warning" />;
-      default:
-        return <SettingsIcon color="action" />;
+  const handleSaveConfig = async (config: Config) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await onSaveConfig(config);
+      setSelectedConfig(config);
+    } catch (err) {
+      setError('Failed to save configuration');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleValidate = async (config: Config): Promise<ValidationResult[]> => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await onValidate(config);
+      setValidationResults(result);
+      return result;
+    } catch (err) {
+      setError('Failed to validate configuration');
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveRule = async (rule: ValidationRule) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await onSaveRule(rule);
+      setValidationRules([...validationRules, rule]);
+    } catch (err) {
+      setError('Failed to save validation rule');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteRule = async (ruleId: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      await onDeleteRule(ruleId);
+      setValidationRules(validationRules.filter(rule => rule.id !== ruleId));
+    } catch (err) {
+      setError('Failed to delete validation rule');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Configuration Manager</Typography>
-        <Box display="flex" gap={1}>
-          <Tooltip title="Refresh">
-            <IconButton onClick={loadConfigs} disabled={isLoading}>
-              {isLoading ? <CircularProgress size={24} /> : <RefreshIcon />}
-            </IconButton>
-          </Tooltip>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setActiveTab(0)}
-          >
-            New Configuration
-          </Button>
-        </Box>
-      </Box>
-
-      {/* Quick Actions */}
-      <Box sx={{ flexGrow: 1 }}>
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid component="div" item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Security
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Manage encryption and access control
-                </Typography>
-              </CardContent>
-              <CardActions>
-                <Button
-                  startIcon={<SecurityIcon />}
-                  onClick={() => setShowSecurity(true)}
-                >
-                  Open
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid component="div" item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Templates
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Create and manage configuration templates
-                </Typography>
-              </CardContent>
-              <CardActions>
-                <Button
-                  startIcon={<DescriptionIcon />}
-                  onClick={() => setShowTemplate(true)}
-                >
-                  Open
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid component="div" item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Import/Export
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Import and export configurations
-                </Typography>
-              </CardContent>
-              <CardActions>
-                <Button
-                  startIcon={<FileUploadIcon />}
-                  onClick={() => setShowImportExport(true)}
-                >
-                  Open
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-          <Grid component="div" item xs={12} sm={6} md={3}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Statistics
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  View configuration statistics
-                </Typography>
-              </CardContent>
-              <CardActions>
-                <Button
-                  startIcon={<AssessmentIcon />}
-                  onClick={() => setShowStats(true)}
-                >
-                  Open
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-        </Grid>
-      </Box>
-
-      {/* Main Content */}
-      <Paper sx={{ mb: 3 }}>
+    <Box>
+      <Paper sx={{ mb: 2 }}>
         <Tabs
           value={activeTab}
           onChange={handleTabChange}
@@ -249,115 +143,92 @@ const ConfigManager: React.FC<ConfigManagerProps> = ({
           scrollButtons="auto"
         >
           <Tab label="Editor" />
+          <Tab label="Security" />
+          <Tab label="Templates" />
           <Tab label="Validation" />
-          <Tab label="History" />
+          <Tab label="Stats" />
         </Tabs>
-        <Box sx={{ p: 2 }}>
-          {activeTab === 0 && (
-            <ConfigEditor
-              configs={configs}
-              onSave={(config) => onSave(config)}
-              onRefresh={loadConfigs}
-            />
-          )}
-          {activeTab === 1 && (
-            <ConfigValidation
-              open={true}
-              onClose={() => setActiveTab(0)}
-              onValidate={onValidate}
-              onSaveRule={onSaveRule}
-              onDeleteRule={onDeleteRule}
-              rules={rules}
-              results={[]}
-            />
-          )}
-          {activeTab === 2 && (
-            <Box>
-              <Typography variant="h6" gutterBottom>
-                Configuration History
-              </Typography>
-              <List>
-                {configs.map((config) => (
-                  <React.Fragment key={config.id}>
-                    <ListItem>
-                      <ListItemIcon>
-                        {getStatusIcon(config.status)}
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={config.name}
-                        secondary={
-                          <>
-                            <Typography
-                              component="span"
-                              variant="body2"
-                              color="text.primary"
-                            >
-                              {config.description}
-                            </Typography>
-                            <Typography
-                              component="span"
-                              variant="body2"
-                              color="text.secondary"
-                              display="block"
-                            >
-                              Last updated: {config.updatedAt}
-                            </Typography>
-                          </>
-                        }
-                      />
-                      <ListItemSecondaryAction>
-                        <Box display="flex" gap={1}>
-                          <Chip
-                            label={config.type}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                          />
-                          <IconButton edge="end">
-                            <EditIcon />
-                          </IconButton>
-                        </Box>
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                    <Divider />
-                  </React.Fragment>
-                ))}
-              </List>
-            </Box>
-          )}
-        </Box>
       </Paper>
 
-      {/* Dialogs */}
-      <ConfigSecurity
-        open={showSecurity}
-        onClose={() => setShowSecurity(false)}
-        onEncrypt={onEncrypt}
-        onDecrypt={onDecrypt}
-      />
-      <ConfigTemplate
-        open={showTemplate}
-        onClose={() => setShowTemplate(false)}
-        onSaveTemplate={onSaveTemplate}
-        onDeleteTemplate={onDeleteTemplate}
-        onApplyTemplate={onApplyTemplate}
-        templates={templates}
-      />
-      <ConfigImportExport
-        open={showImportExport}
-        onClose={() => setShowImportExport(false)}
-        onImport={onImport}
-        onExport={onExport}
-        onDelete={onDelete}
-        configs={configs}
-      />
-      <ConfigStats
-        open={showStats}
-        onClose={() => setShowStats(false)}
-        stats={stats}
-      />
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+      )}
+
+      {loading && (
+        <Box display="flex" justifyContent="center" my={2}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {activeTab === 0 && selectedConfig && (
+        <ConfigEditor
+          config={selectedConfig}
+          onSave={handleSaveConfig}
+        />
+      )}
+
+      {activeTab === 1 && selectedConfig && (
+        <ConfigSecurity
+          config={selectedConfig}
+          onClose={() => setActiveTab(0)}
+          onEncrypt={onEncrypt}
+          onDecrypt={onDecrypt}
+        />
+      )}
+
+      {activeTab === 2 && (
+        <ConfigTemplate
+          open={true}
+          onClose={() => setActiveTab(0)}
+          onSaveTemplate={onSaveTemplate as (template: Template) => Promise<void>}
+          onDeleteTemplate={onDeleteTemplate}
+          onApplyTemplate={onApplyTemplate}
+          templates={templates.map(t => ({
+            ...t,
+            status: t.status || 'active',
+            createdAt: t.createdAt || new Date().toISOString(),
+            updatedAt: t.updatedAt || new Date().toISOString()
+          }))}
+        />
+      )}
+
+      {activeTab === 3 && selectedConfig && (
+        <ConfigValidation
+          open={true}
+          onClose={() => setActiveTab(0)}
+          onValidate={() => handleValidate(selectedConfig)}
+          onSaveRule={handleSaveRule}
+          onDeleteRule={handleDeleteRule}
+          rules={validationRules}
+          results={validationResults}
+        />
+      )}
+
+      {activeTab === 4 && selectedConfig && (
+        <ConfigStats
+          open={true}
+          onClose={() => setActiveTab(0)}
+          stats={{
+            totalConfigs: configs.length,
+            activeConfigs: configs.filter(c => c.status === 'active').length,
+            encryptedConfigs: configs.filter(c => c.status === 'encrypted').length,
+            lastUpdated: selectedConfig.updatedAt || new Date().toISOString(),
+            accessCount: 0,
+            errorCount: 0,
+            avgResponseTime: 0,
+            cacheHitRate: 0,
+            memoryUsage: 0,
+            diskUsage: 0,
+            operationHistory: [],
+            errorDistribution: [],
+            accessPatterns: []
+          }}
+        />
+      )}
     </Box>
   );
 };
 
-export default ConfigManager; 
+export default ConfigManager;

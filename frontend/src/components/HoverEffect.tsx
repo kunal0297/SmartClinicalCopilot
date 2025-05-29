@@ -1,5 +1,3 @@
-import React from "react";
-
 export interface HoverEffectItem {
   title: string;
   description: string;

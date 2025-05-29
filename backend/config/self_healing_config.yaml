@@ -217,4 +217,31 @@ cache:
   db: 0
   default_ttl: 3600  # seconds
   max_size: 1000
-  cleanup_interval: 300  # seconds 
+  cleanup_interval: 300  # seconds
+
+# Add LLM and IRIS configurations
+llm_settings:
+  local_model:
+    enabled: true
+    model_name: "mistral"
+    quantization: "8bit"
+    max_batch_size: 32
+    cache_dir: "./models"
+    fallback_models:
+      - "llama2"
+      - "mistral"
+    metrics:
+      enabled: true
+      collection_interval: 60
+
+iris_database:
+  connection_pool:
+    min_size: 5
+    max_size: 20
+    timeout: 30
+  cache:
+    enabled: true
+    ttl: 3600
+  monitoring:
+    enabled: true
+    metrics_interval: 30

@@ -37,18 +37,7 @@ import {
   Refresh as RefreshIcon
 } from '@mui/icons-material';
 import MonacoEditor from '@monaco-editor/react';
-
-interface Template {
-  id: string;
-  name: string;
-  description: string;
-  type: 'json' | 'yaml' | 'toml' | 'env';
-  content: string;
-  variables: string[];
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Template } from '../types/config';
 
 interface ConfigTemplateProps {
   open: boolean;
@@ -193,6 +182,14 @@ const ConfigTemplate: React.FC<ConfigTemplateProps> = ({
                       secondary={template.description}
                     />
                     <ListItemSecondaryAction>
+                      <Tooltip title="Edit Template">
+                        <IconButton
+                          edge="end"
+                          onClick={() => setSelectedTemplate(template)}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
                       <Chip
                         label={template.type}
                         size="small"
@@ -204,6 +201,23 @@ const ConfigTemplate: React.FC<ConfigTemplateProps> = ({
                   <Divider />
                 </React.Fragment>
               ))}
+              <ListItem button onClick={() => setSelectedTemplate({
+                id: '',
+                name: '',
+                description: '',
+                type: 'json',
+                content: '',
+                variables: [],
+                tags: [],
+                status: 'active',
+                updatedAt: new Date().toISOString(),
+                createdAt: new Date().toISOString()
+              })}>
+                <ListItemIcon>
+                  <AddIcon color="primary" />
+                </ListItemIcon>
+                <ListItemText primary="Add New Template" />
+              </ListItem>
             </List>
           </Grid>
 
