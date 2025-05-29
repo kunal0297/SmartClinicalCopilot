@@ -8,14 +8,19 @@ services:
       - "51773:51773"
     volumes:
       - iris_data:/usr/irissys/mgr
+      - ./iris:/opt/irisapp
     environment:
-      - ISC_PACKAGE_INSTALLDIR=/usr/irissys/mgr/python
-      - ISC_PACKAGE_MOUNTDIR=/usr/irissys/mgr/python
+      - ISC_PACKAGE_INSTALLDIR=/usr/irissys
+      - ISC_PACKAGE_MOUNTDIR=/usr/irissys
+      - IRIS_USERNAME=SuperUser
+      - IRIS_PASSWORD=SYS
+      - ISC_PACKAGE_INSTANCENAME=IRIS
     healthcheck:
       test: ["CMD", "iris", "list"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   backend:
     build:
@@ -32,8 +37,10 @@ services:
       - IRIS_NAMESPACE=USER
       - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
-      - iris
-      - db
+      iris:
+        condition: service_healthy
+      db:
+        condition: service_healthy
 
   frontend:
     build:
@@ -66,6 +73,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   fhir-server:
     image: hapiproject/hapi:latest
@@ -88,6 +96,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   iris_data:

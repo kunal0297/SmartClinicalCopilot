@@ -19,47 +19,41 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
 .env
 .venv
 env/
 venv/
 ENV/
+env.bak/
+venv.bak/
 
 # Node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
-.DS_Store
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-.next/
-out/
-build/
-dist/
+
+# Docker
+.docker/
+docker-compose.override.yml
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-.project
-.classpath
-.settings/
+.DS_Store
 
-# Docker
-.docker/
-
-# Logs
-logs/
+# Project specific
 *.log
-
-# Database
-*.sqlite3
-*.db
+data/
+cache/
+logs/
 
 # OS generated files
 .DS_Store

@@ -56,15 +56,18 @@ class RuleLoader:
                 if filename.endswith(".yaml"):
                     rule_path = os.path.join(self.rules_dir, filename)
                     with open(rule_path, "r") as f:
-                        rule_data = yaml.safe_load(f)
-                        try:
-                            # Validate rule structure
-                            rule = Rule(**rule_data)
-                            rules.append(rule)
-                            logger.info(f"Successfully loaded rule: {rule.id}")
-                        except Exception as e:
-                            logger.error(f"Error validating rule in {filename}: {str(e)}")
-                            continue
+                        # Load all documents from the YAML file
+                        for rule_data in yaml.safe_load_all(f):
+                            if rule_data is None:
+                                continue
+                            try:
+                                # Validate rule structure
+                                rule = Rule(**rule_data)
+                                rules.append(rule)
+                                logger.info(f"Successfully loaded rule: {rule.id}")
+                            except Exception as e:
+                                logger.error(f"Error validating rule in {filename}: {str(e)}")
+                                continue
         except Exception as e:
             logger.error(f"Error loading rules: {str(e)}")
             return []

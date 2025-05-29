@@ -22,6 +22,7 @@ openai>=1.0.0
 tenacity>=8.0.0
 scikit-learn~=1.4.2
 numpy~=1.26.4
+shap>=0.45.0
 
 # Healthcare
 fhirclient~=4.3.1
@@ -56,3 +57,4 @@ black>=23.0.0
 isort>=5.12.0
 flake8>=6.0.0
 mypy>=1.0.0
+PyJWT>=2.0.0
