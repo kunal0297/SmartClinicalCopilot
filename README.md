@@ -1,95 +1,171 @@
-# Smart Clinical Copilot
+# 🏥 Smart Clinical Copilot
+
+<div align="center">
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.68+-green.svg)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://reactjs.org)
+[![Docker](https://img.shields.io/badge/Docker-20.10+-2496ED.svg)](https://www.docker.com)
+[![FHIR](https://img.shields.io/badge/FHIR-R4-2A2A2A.svg)](https://www.hl7.org/fhir)
 
 A comprehensive clinical decision support system that integrates with FHIR and IRIS for Healthcare to provide real-time clinical guidance and alerts.
 
-## Features
+[Features](#features) • [Architecture](#architecture) • [Quick Start](#quick-start) • [Development](#development) • [Contributing](#contributing)
 
-- Real-time clinical decision support
-- FHIR integration for healthcare data
-- IRIS for Healthcare integration
-- Rule-based alerting system
-- Modern web interface
-- Docker-based deployment
+</div>
 
-## Architecture
+## ✨ Features
+
+<div align="center">
+
+| Category | Features |
+|:--------:|:---------|
+| 🏥 **Clinical Support** | • Real-time clinical decision support<br>• Rule-based alerting system<br>• Patient risk assessment<br>• Medication safety checks |
+| 🔄 **Integration** | • FHIR integration for healthcare data<br>• IRIS for Healthcare integration<br>• Multi-system interoperability<br>• Real-time data synchronization |
+| 💻 **User Interface** | • Modern, responsive web interface<br>• Intuitive clinical dashboard<br>• Real-time alerts and notifications<br>• Customizable views |
+| 🛠️ **Technical** | • Docker-based deployment<br>• Scalable microservices architecture<br>• High-performance data processing<br>• Secure data handling |
+
+</div>
+
+## 🏗️ Architecture
 
 The system consists of the following components:
 
-- **Frontend**: React-based web interface
-- **Backend**: FastAPI-based API server
-- **FHIR Server**: HAPI FHIR server
-- **IRIS**: InterSystems IRIS for Healthcare
-- **Database**: PostgreSQL
+<div align="center">
 
-## Prerequisites
+```mermaid
+graph TD
+    A[Frontend] --> B[Backend API]
+    B --> C[FHIR Server]
+    B --> D[IRIS]
+    B --> E[Database]
+    B --> F[Rule Engine]
+    F --> G[Alert System]
+    B --> H[Monitoring]
+```
+
+</div>
+
+### Core Components
+
+- **Frontend**: React-based web interface with Material-UI
+- **Backend**: FastAPI-based API server with Python
+- **FHIR Server**: HAPI FHIR server for healthcare data
+- **IRIS**: InterSystems IRIS for Healthcare integration
+- **Database**: PostgreSQL for data persistence
+- **Rule Engine**: Custom rule processing system
+- **Monitoring**: System health and performance tracking
+
+## 🚀 Quick Start
+
+### Prerequisites
 
 - Docker and Docker Compose
 - Git
 - Node.js (for local development)
 - Python 3.9+ (for local development)
 
-## Quick Start
+### Installation
 
-1. Clone the repository:
+1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/SmartClinicalCopilot.git
+   git clone https://github.com/kunal0297/SmartClinicalCopilot.git
    cd SmartClinicalCopilot
    ```
 
-2. Start the services:
+2. **Start the services:**
    ```bash
    docker-compose up -d
    ```
 
-3. Access the services:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:8000
-   - FHIR Server: http://localhost:8080
-   - IRIS Management Portal: http://localhost:52773
+3. **Access the services:**
+   - Frontend: [http://localhost:3000](http://localhost:3000)
+   - Backend API: [http://localhost:8000](http://localhost:8000)
+   - FHIR Server: [http://localhost:8080](http://localhost:8080)
+   - IRIS Management Portal: [http://localhost:52773](http://localhost:52773)
 
-## Development
+## 💻 Development
 
 ### Backend Development
 
-1. Create a virtual environment:
+1. **Set up the environment:**
    ```bash
    python -m venv venv
    source venv/bin/activate  # Linux/Mac
    venv\Scripts\activate     # Windows
    ```
 
-2. Install dependencies:
+2. **Install dependencies:**
    ```bash
    cd backend
    pip install -r requirements.txt
    ```
 
-3. Run the development server:
+3. **Run the development server:**
    ```bash
    uvicorn app:app --reload
    ```
 
 ### Frontend Development
 
-1. Install dependencies:
+1. **Install dependencies:**
    ```bash
    cd frontend
    npm install
    ```
 
-2. Run the development server:
+2. **Run the development server:**
    ```bash
    npm run dev
    ```
 
-## Contributing
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
 
 1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## License
+### Development Guidelines
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- Follow PEP 8 for Python code
+- Use TypeScript best practices for frontend code
+- Write meaningful commit messages
+- Include tests for new features
+- Update documentation as needed
+
+## 📚 Documentation
+
+- [API Documentation](http://localhost:8000/docs)
+- [Frontend Documentation](./frontend/README.md)
+- [Backend Documentation](./backend/README.md)
+- [Deployment Guide](./docs/deployment.md)
+
+## 🔒 Security
+
+- All data is encrypted in transit and at rest
+- Role-based access control
+- Regular security audits
+- HIPAA compliance measures
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Contact
+
+**Team Kunal0297**
+- Email: kunalpandey0297@gmail.com
+- GitHub: [@kunal0297](https://github.com/kunal0297)
+
+---
+
+<div align="center">
+
+Made with ❤️ by Team Kunal0297
+
+</div>
