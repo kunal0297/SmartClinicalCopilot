@@ -32,11 +32,12 @@ WORKDIR /app/frontend
 # Copy the build output from the builder stage
 COPY --from=builder /app/frontend/dist /app/frontend/dist
 
-# Install http-server to run the built application
-RUN npm install -g http-server
+# Install http-server and curl
+RUN apt-get update && apt-get install -y curl && \
+    npm install -g http-server
 
 # Expose the port
 EXPOSE 3000
 
 # Start the application using http-server with explicit rewrite for SPA
-CMD ["http-server", "dist", "--host", "0.0.0.0", "-p", "3000", "--rewrite", "/"]
+CMD ["http-server", "dist", "--host", "0.0.0.0", "-p", "3000", "--rewrite", "/index.html", "--cors"]

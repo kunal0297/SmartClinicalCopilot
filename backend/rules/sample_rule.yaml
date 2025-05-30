@@ -1,0 +1,29 @@
+name: "High Blood Pressure Alert"
+description: "Alert for patients with consistently high blood pressure readings"
+version: "1.0"
+severity: "high"
+conditions:
+  - type: "observation"
+    code: "blood-pressure"
+    operator: ">"
+    value: 140
+    duration: "24h"
+    frequency: 3
+actions:
+  - type: "alert"
+    message: "Patient has shown consistently high blood pressure readings over the last 24 hours"
+    recommendations:
+      - "Consider immediate blood pressure medication adjustment"
+      - "Schedule follow-up appointment"
+      - "Monitor for symptoms of hypertensive crisis"
+explanations:
+  - type: "clinical"
+    text: "Sustained blood pressure above 140 mmHg indicates stage 2 hypertension and requires immediate attention"
+  - type: "patient"
+    text: "Your blood pressure has been consistently high. This could lead to serious health problems if not addressed."
+metadata:
+  category: "cardiovascular"
+  tags: ["blood-pressure", "hypertension", "urgent"]
+  references:
+    - "JNC 8 Guidelines"
+    - "AHA/ACC 2017 Guidelines" 

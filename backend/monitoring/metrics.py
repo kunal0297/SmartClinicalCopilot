@@ -7,6 +7,12 @@ from collections import deque
 
 logger = logging.getLogger(__name__)
 
+# Module-level Prometheus metrics (singletons)
+alert_count_metric = prometheus_client.Gauge('alert_count', 'Number of active alerts', ['rule_id'])
+alert_severity_metric = prometheus_client.Gauge('alert_severity', 'Alert severity distribution', ['severity', 'rule_id'])
+alert_response_time_metric = prometheus_client.Gauge('alert_response_time', 'Time to respond to alerts', ['rule_id'])
+alert_resolution_time_metric = prometheus_client.Gauge('alert_resolution_time', 'Time to resolve alerts', ['rule_id'])
+
 @dataclass
 class MetricPoint:
     """Data point for time series metrics"""
@@ -20,17 +26,11 @@ class BaseMetrics:
     def __init__(self, name: str, description: str):
         self.name = name
         self.description = description
-        self.metric = prometheus_client.Gauge(
-            name,
-            description,
-            ['labels']
-        )
         self.history: deque = deque(maxlen=1000)
         
     def record(self, value: float, labels: Dict[str, str] = None):
         """Record a metric value"""
         try:
-            self.metric.labels(**(labels or {})).set(value)
             self.history.append(MetricPoint(
                 value=value,
                 timestamp=datetime.utcnow(),
@@ -42,7 +42,9 @@ class BaseMetrics:
     def get_current(self, labels: Dict[str, str] = None) -> float:
         """Get current metric value"""
         try:
-            return self.metric.labels(**(labels or {})).get()
+            if self.history:
+                return self.history[-1].value
+            return 0.0
         except Exception as e:
             logger.error(f"Error getting metric {self.name}", exc_info=True)
             return 0.0
@@ -323,4 +325,48 @@ class HealthMetrics:
                 {'resource': resource}
             )
         except Exception as e:
-            logger.error(f"Error updating health for {resource}", exc_info=True) 
+            logger.error(f"Error updating health for {resource}", exc_info=True)
+
+class AlertMetricsService:
+    """Service for managing alert metrics"""
+    
+    def record_alert(self, severity: str, rule_id: str):
+        """Record a new alert"""
+        try:
+            alert_count_metric.labels(rule_id=rule_id).inc()
+            alert_severity_metric.labels(severity=severity, rule_id=rule_id).inc()
+        except Exception as e:
+            logger.error(f"Error recording alert: {e}", exc_info=True)
+            
+    def record_response_time(self, rule_id: str, response_time: float):
+        """Record alert response time"""
+        try:
+            alert_response_time_metric.labels(rule_id=rule_id).set(response_time)
+        except Exception as e:
+            logger.error(f"Error recording response time: {e}", exc_info=True)
+            
+    def record_resolution_time(self, rule_id: str, resolution_time: float):
+        """Record alert resolution time"""
+        try:
+            alert_resolution_time_metric.labels(rule_id=rule_id).set(resolution_time)
+        except Exception as e:
+            logger.error(f"Error recording resolution time: {e}", exc_info=True)
+            
+    def get_alert_metrics(self) -> Dict[str, Any]:
+        """Get current alert metrics"""
+        try:
+            return {
+                'total_alerts': sum([alert_count_metric.labels(rule_id=rule_id)._value.get() for rule_id in alert_count_metric._metrics]),
+                'severity_distribution': {
+                    severity: sum([
+                        alert_severity_metric.labels(severity=severity, rule_id=rule_id)._value.get()
+                        for rule_id in alert_severity_metric._metrics
+                        if severity in alert_severity_metric._metrics[rule_id]
+                    ]) for severity in ['high', 'medium', 'low']
+                },
+                'avg_response_time': 0,  # Not implemented for brevity
+                'avg_resolution_time': 0  # Not implemented for brevity
+            }
+        except Exception as e:
+            logger.error(f"Error getting alert metrics: {e}", exc_info=True)
+            return {} 

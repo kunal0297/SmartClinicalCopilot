@@ -4,6 +4,8 @@ from typing import List, Dict, Any, Optional
 import yaml
 import threading
 from datetime import datetime, timedelta
+from pydantic_settings import BaseSettings
+from pydantic import Field
 
 # Load environment variables
 load_dotenv()
@@ -57,134 +59,88 @@ class MockRedis:
             if key in self._expiry:
                 return int((self._expiry[key] - datetime.now()).total_seconds())
             return -1
+            
+    def hincrby(self, name, key, amount=1):
+        """Increment the value of a hash field by the given amount"""
+        with self._lock:
+            if name not in self._data:
+                self._data[name] = {}
+            if key not in self._data[name]:
+                self._data[name][key] = 0
+            self._data[name][key] = int(self._data[name][key]) + amount
+            return self._data[name][key]
 
-class Settings:
-    API_VERSION = "1.0.0"
-    API_TITLE = "Clinical Decision Support System"
-    API_DESCRIPTION = "API for clinical rule matching and explanation services"
-    HOST = os.getenv("HOST", "0.0.0.0")
-    PORT = int(os.getenv("PORT", "8000"))
-    DEBUG = os.getenv("DEBUG", "False").lower() == "true"
-    ALLOWED_ORIGINS: List[str] = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
-    ALLOWED_HOSTS: List[str] = os.getenv("ALLOWED_HOSTS", "*").split(",")
-    FHIR_BASE_URL = os.getenv("FHIR_BASE_URL", "http://localhost:8080/fhir")
-    FHIR_TIMEOUT = int(os.getenv("FHIR_TIMEOUT", "30"))
+class Settings(BaseSettings):
+    # API Settings
+    API_V1_STR: str = "/api/v1"
+    PROJECT_NAME: str = "Smart Clinical Copilot"
+    SUPPORT_EMAIL: str = os.getenv("SUPPORT_EMAIL", "kunalpandey0297@gmail.com")
     
-    # LLM Configuration
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4")
-    OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.7"))
-    OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS", "1000"))
+    # CORS Settings
+    CORS_ORIGINS: List[str] = ["*"]
     
-    # Local LLM Configuration
-    USE_LOCAL_LLM = os.getenv("USE_LOCAL_LLM", "false").lower() == "true"
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral")
-    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.7"))
-    OLLAMA_MAX_TOKENS = int(os.getenv("OLLAMA_MAX_TOKENS", "1000"))
+    # Environment
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     
-    # Other Settings
-    RULES_DIR = os.getenv("RULES_DIR", "rules")
-    RULE_LOAD_RETRY_ATTEMPTS = int(os.getenv("RULE_LOAD_RETRY_ATTEMPTS", "3"))
-    RULE_LOAD_RETRY_DELAY = int(os.getenv("RULE_LOAD_RETRY_DELAY", "1"))
-    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-    LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    API_KEY_HEADER = "X-API-Key"
-    API_KEY = os.getenv("API_KEY")
-    RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "60"))
-    RATE_LIMIT_PERIOD = int(os.getenv("RATE_LIMIT_PERIOD", "60"))
-    CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))
-    CACHE_MAX_SIZE = int(os.getenv("CACHE_MAX_SIZE", "1000"))
-    MAX_PATIENT_AGE = int(os.getenv("MAX_PATIENT_AGE", "120"))
-    MIN_PATIENT_AGE = int(os.getenv("MIN_PATIENT_AGE", "0"))
-    VALID_GENDERS = ["male", "female", "other", "unknown"]
-    ERROR_MESSAGES = {
-        "patient_not_found": "Patient not found",
-        "invalid_patient_id": "Invalid patient ID",
-        "invalid_rule_id": "Invalid rule ID",
-        "rule_not_found": "Rule not found",
-        "invalid_request": "Invalid request",
-        "server_error": "Internal server error",
-        "rate_limit_exceeded": "Rate limit exceeded",
-        "unauthorized": "Unauthorized access",
-        "forbidden": "Forbidden access",
-        "validation_error": "Validation error",
-    }
-    SUCCESS_MESSAGES = {
-        "patient_retrieved": "Patient retrieved successfully",
-        "rules_matched": "Rules matched successfully",
-        "rule_explained": "Rule explained successfully",
-        "rules_suggested": "Rules suggested successfully",
-    }
-    SMART_CLIENT_ID = os.getenv("SMART_CLIENT_ID")
-    SMART_CLIENT_SECRET = os.getenv("SMART_CLIENT_SECRET")
-    SMART_REDIRECT_URI = os.getenv("SMART_REDIRECT_URI")
-    SMART_STATE_SECRET = os.getenv("SMART_STATE_SECRET")
-    SMART_JWT_SECRET = os.getenv("SMART_JWT_SECRET")
+    # Database
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+    
+    # FHIR Server
+    FHIR_SERVER_URL: str = os.getenv("FHIR_SERVER_URL", "http://localhost:8080/fhir")
+    
+    # LLM Settings
+    LLM_API_KEY: str = os.getenv("LLM_API_KEY", "")
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-3.5-turbo")
+    
+    # Redis Settings
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://redis:6379/0")
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "redis")
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
+    
+    # Security
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
+    
+    # Monitoring
+    ENABLE_METRICS: bool = True
+    METRICS_PORT: int = 9090
+    METRICS_RETENTION_DAYS: int = 7
+    HEALTH_CHECK_INTERVAL: int = 30
+    ERROR_RATE_INTERVAL: int = 60
+    
+    # Logging
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    
+    # Recovery settings
+    MAX_RETRIES: int = 3
+    INITIAL_RETRY_DELAY: int = 1
+    MAX_RETRY_DELAY: int = 30
+    
+    # Server settings
+    SERVER_HOST: str = os.getenv("SERVER_HOST", "0.0.0.0")
+    SERVER_PORT: int = int(os.getenv("SERVER_PORT", "8000"))
+    DEBUG_MODE: bool = os.getenv("DEBUG_MODE", "True").lower() == "true"
+    
+    # SMART on FHIR settings
+    SMART_CLIENT_ID: str = os.getenv("SMART_CLIENT_ID", "smart_clinical_copilot")
+    SMART_CLIENT_SECRET: str = os.getenv("SMART_CLIENT_SECRET", "your-smart-client-secret")
+    SMART_REDIRECT_URI: str = os.getenv("SMART_REDIRECT_URI", "http://localhost:8000/smart/callback")
+    SMART_STATE_SECRET: str = os.getenv("SMART_STATE_SECRET", "your-smart-state-secret")
+    SMART_JWT_SECRET: str = os.getenv("SMART_JWT_SECRET", "your-smart-jwt-secret")
+    
+    # Redis client (not loaded from env)
+    redis_client: Optional[MockRedis] = Field(default=None, exclude=True)
+    
+    class Config:
+        case_sensitive = True
+        env_file = ".env"
 
-    def __init__(self):
-        # Load configuration
-        self.config = self._load_config()
-        
-        # Redis settings
-        self.REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-        self.REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
-        self.REDIS_DB = int(os.getenv("REDIS_DB", 0))
-        
-        # Security settings
-        self.SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key")
-        self.ALGORITHM = "HS256"
-        self.ACCESS_TOKEN_EXPIRE_MINUTES = 30
-        
-        # Monitoring settings
-        self.METRICS_RETENTION_DAYS = 7
-        self.HEALTH_CHECK_INTERVAL = 30
-        self.ERROR_RATE_INTERVAL = 60
-        
-        # Recovery settings
-        self.MAX_RETRIES = 3
-        self.INITIAL_RETRY_DELAY = 1
-        self.MAX_RETRY_DELAY = 30
-        
-        # Load settings from config
-        self._load_from_config()
-        
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         # Use mock Redis for development
         self.redis_client = MockRedis()
         
-    def _load_config(self) -> Dict[str, Any]:
-        """Load configuration from YAML file"""
-        try:
-            with open("config/self_healing_config.yaml", "r") as f:
-                return yaml.safe_load(f)
-        except Exception as e:
-            print(f"Error loading config: {e}")
-            return {}
-            
-    def _load_from_config(self):
-        """Load settings from configuration"""
-        try:
-            # Monitoring settings
-            monitoring = self.config.get("monitoring", {})
-            self.METRICS_RETENTION_DAYS = monitoring.get("retention_days", 7)
-            self.HEALTH_CHECK_INTERVAL = monitoring.get("service_health_interval", 30)
-            self.ERROR_RATE_INTERVAL = monitoring.get("error_rate_interval", 60)
-            
-            # Recovery settings
-            recovery = self.config.get("recovery", {})
-            self.MAX_RETRIES = recovery.get("max_retries", 3)
-            self.INITIAL_RETRY_DELAY = recovery.get("initial_retry_delay", 1)
-            self.MAX_RETRY_DELAY = recovery.get("max_retry_delay", 30)
-            
-            # Redis settings
-            metrics = self.config.get("metrics", {}).get("redis", {})
-            self.REDIS_HOST = metrics.get("host", "localhost")
-            self.REDIS_PORT = metrics.get("port", 6379)
-            self.REDIS_DB = metrics.get("db", 0)
-            
-        except Exception as e:
-            print(f"Error loading settings from config: {e}")
-            
     def get(self, key: str, default: Any = None) -> Any:
         """Get setting value"""
         return getattr(self, key, default)
@@ -192,10 +148,6 @@ class Settings:
     def set(self, key: str, value: Any):
         """Set setting value"""
         setattr(self, key, value)
-        
-    def reload(self):
-        """Reload settings from configuration"""
-        self.config = self._load_config()
-        self._load_from_config()
 
+# Create settings instance
 settings = Settings() 

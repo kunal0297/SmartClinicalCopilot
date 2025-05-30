@@ -1,9 +1,10 @@
 import logging
 import asyncio
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+from datetime import datetime
 import redis
-from .config import settings
-from .cache_manager import CacheManager
+from backend.config import settings
+from backend.cache_manager import CacheManager
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,10 @@ class FallbackStrategies:
             decode_responses=True
         )
         self.cache_manager = CacheManager()
+        self.disabled_features: List[str] = []
+        self.feature_status: Dict[str, bool] = {}
+        self.last_check: Dict[str, datetime] = {}
+        self.check_interval = 300  # 5 minutes
         
     async def degrade_service(self, service_name: str) -> Dict[str, Any]:
         """Degrade service to basic functionality"""
@@ -260,9 +265,14 @@ class FallbackStrategies:
         return {}
         
     async def _disable_features(self, features: List[str]) -> List[str]:
-        """Disable features"""
-        # Implement feature disabling
-        return []
+        """Disable specified features"""
+        disabled = []
+        for feature in features:
+            if feature not in self.disabled_features:
+                self.disabled_features.append(feature)
+                self.feature_status[feature] = False
+                disabled.append(feature)
+        return disabled
         
     async def _update_feature_status(self, features: List[str]):
         """Update feature status"""

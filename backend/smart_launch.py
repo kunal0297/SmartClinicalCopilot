@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional
 import jwt
 import time
 import logging
-from config import settings
+from backend.config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

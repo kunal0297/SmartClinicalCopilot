@@ -19,14 +19,54 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
-.env
-.venv
-env/
+
+# Virtual Environment
 venv/
 ENV/
-env.bak/
-venv.bak/
+env/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker
+.docker/
+
+# Logs
+*.log
+logs/
+log/
+
+# Database
+*.db
+*.sqlite3
+
+# Cache
+.cache/
+__pycache__/
+.pytest_cache/
+
+# Environment variables
+.env
+.env.*
+
+# Metrics and monitoring
+metrics/
+prometheus/
+grafana/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# System Files
+.DS_Store
+Thumbs.db
 
 # Node
 node_modules/
@@ -39,24 +79,18 @@ yarn-error.log*
 .env.production.local
 
 # Docker
-.docker/
 docker-compose.override.yml
 
 # IDE
-.idea/
-.vscode/
 *.swp
 *.swo
 .DS_Store
 
 # Project specific
-*.log
 data/
 cache/
-logs/
 
 # OS generated files
-.DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
@@ -88,10 +122,3 @@ backend/.env
 backend/logs/
 backend/data/
 backend/cache/
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
-*.swp
-*~

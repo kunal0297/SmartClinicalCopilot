@@ -1,65 +1,83 @@
-version: '3.8'
-
 services:
-  iris:
-    image: intersystemsdc/iris-community:latest
-    ports:
-      - "52773:52773"
-      - "51773:51773"
-    volumes:
-      - iris_data:/usr/irissys/mgr
-      - ./iris:/opt/irisapp
-    environment:
-      - ISC_PACKAGE_INSTALLDIR=/usr/irissys
-      - ISC_PACKAGE_MOUNTDIR=/usr/irissys
-      - IRIS_USERNAME=SuperUser
-      - IRIS_PASSWORD=SYS
-      - ISC_PACKAGE_INSTANCENAME=IRIS
-    healthcheck:
-      test: ["CMD", "iris", "list"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./backend:/app
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/clinical_copilot
-      - IRIS_HOST=iris
-      - IRIS_PORT=52773
-      - IRIS_NAMESPACE=USER
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-    depends_on:
-      iris:
-        condition: service_healthy
-      db:
-        condition: service_healthy
-
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/dist
     environment:
-      - VITE_API_URL=http://localhost:8000
-      - VITE_FHIR_SERVER_URL=http://localhost:8080/fhir
+      - VITE_API_BASE_URL=http://localhost:8000
+    networks:
+      - clinical-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/index.html"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/clinical_copilot
+      - IRIS_HOST=iris
+      - IRIS_PORT=52773
+      - IRIS_NAMESPACE=USER
+      - REDIS_URL=redis://redis:6379/0
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+      - PYTHONPATH=/app
+      - FHIR_SERVER_URL=http://fhir:8080/fhir
     depends_on:
-      - backend
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      iris:
+        condition: service_healthy
+      fhir:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - ./static:/app/static
+    working_dir: /app
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - clinical-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/detailed"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  fhir:
+    image: hapiproject/hapi:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=r4
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:hapi
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.H2Dialect
+      - SPRING_DATASOURCE_DRIVERCLASSNAME=org.h2.Driver
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+    networks:
+      - clinical-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/fhir/metadata"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   db:
-    image: postgres:15
+    image: postgres:15-alpine
     ports:
       - "5432:5432"
     environment:
@@ -68,36 +86,55 @@ services:
       - POSTGRES_DB=clinical_copilot
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - clinical-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
 
-  fhir-server:
-    image: hapiproject/hapi:latest
+  redis:
+    image: redis:7-alpine
     ports:
-      - "8080:8080"
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - clinical-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  iris:
+    image: intersystemsdc/iris-community:latest
+    ports:
+      - "52773:52773"
+      - "51773:51773"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/clinical_copilot
-      - SPRING_DATASOURCE_USERNAME=postgres
-      - SPRING_DATASOURCE_PASSWORD=postgres
-      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - SPRING_JPA_SHOW_SQL=true
-      - SPRING_PROFILES_ACTIVE=postgres
-      - HAPI_FHIR_FHIR_VERSION=R4
-      - HAPI_FHIR_SERVER_URL=http://localhost:8080/fhir
-      - HAPI_FHIR_SERVER_PATH=/fhir
-      - HAPI_FHIR_SERVER_CORS_ENABLED=true
-      - HAPI_FHIR_SERVER_CORS_ALLOWED_ORIGIN=*
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
+      - ISC_PACKAGE_INSTALLDIR=/usr/irissys
+      - ISC_PACKAGE_MOUNTDIR=/usr/irissys
+      - IRIS_USERNAME=SuperUser
+      - IRIS_PASSWORD=SYS
+      - ISC_PACKAGE_INSTANCENAME=IRIS
+    volumes:
+      - iris_data:/usr/irissys/mgr
+      - ./iris:/opt/irisapp
+    networks:
+      - clinical-network
+    healthcheck:
+      test: ["CMD", "iris", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  iris_data:
   postgres_data:
+  redis_data:
+  iris_data:
+
+networks:
+  clinical-network:
+    driver: bridge

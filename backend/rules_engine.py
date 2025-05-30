@@ -1,226 +1,155 @@
-from typing import List, Dict, Any, Optional
-import json
-from datetime import datetime
 import logging
-from durable_rules import Engine, KnowledgeBase
-from .models import ClinicalRule, RuleMatch, ClinicalScore
+from typing import Dict, List, Any, Optional
+# import yaml
+# from pathlib import Path
+# import json
+from datetime import datetime, timedelta
+# from durable.rules import Engine, KnowledgeBase
+from experta import *
 
 logger = logging.getLogger(__name__)
 
-class RulesEngine:
-    def __init__(self):
-        self.engine = Engine()
-        self.knowledge_base = KnowledgeBase()
-        self._load_rules()
+class BloodPressureFact(Fact):
+    """Fact representing a blood pressure reading"""
+    systolic = Field(int, mandatory=True)
+    diastolic = Field(int, mandatory=True)
+    timestamp = Field(datetime, mandatory=True)
 
-    def _load_rules(self):
-        """Load clinical rules from the database"""
-        # Example rules - in production, these would come from the database
-        self.rules = [
-            {
-                "id": 1,
-                "name": "NSAID CKD Contraindication",
-                "guideline": "KDIGO 2021",
-                "section": "4.3.1",
-                "rule": """
-                when
-                    patient.egfr < 30 and
-                    medication.type == "NSAID"
-                then
-                    raise_alert("NSAID contraindicated in CKD stage 4")
-                """
-            },
-            {
-                "id": 2,
-                "name": "ACE Inhibitor Hyperkalemia",
-                "guideline": "KDIGO 2021",
-                "section": "4.2.1",
-                "rule": """
-                when
-                    patient.potassium > 5.5 and
-                    medication.type == "ACE Inhibitor"
-                then
-                    raise_alert("ACE inhibitor contraindicated with hyperkalemia")
-                """
-            },
-            # Add more rules here
-        ]
+class MedicationFact(Fact):
+    """Fact representing a medication"""
+    name = Field(str, mandatory=True)
+    dosage = Field(str, mandatory=True)
+    frequency = Field(str, mandatory=True)
+    start_date = Field(datetime, mandatory=True)
 
-        # Load rules into the engine
-        for rule in self.rules:
-            self.engine.add_rule(rule["rule"])
+class ConditionFact(Fact):
+    """Fact representing a medical condition"""
+    name = Field(str, mandatory=True)
+    status = Field(str, mandatory=True)
+    onset_date = Field(datetime, mandatory=True)
 
-    def evaluate_all(self, patient_data: Dict[str, Any]) -> List[RuleMatch]:
-        """Evaluate all clinical rules for a patient"""
-        matches = []
-        
+class AlertFact(Fact):
+    """Fact representing an alert"""
+    type = Field(str, mandatory=True)
+    severity = Field(str, mandatory=True)
+    message = Field(str, mandatory=True)
+    recommendations = Field(list, mandatory=True)
+
+# Refactored to use experta
+class RulesEngine(KnowledgeEngine):
+    # You will need to define your rules here as methods using the @Rule decorator
+    # For example:
+    # @Rule(Fact(status='critical'))
+    # def critical_status_rule(self, fact):
+    #     print("Detected critical status!")
+    #     # You can assert new facts or perform actions here
+
+    def __init__(self, config_path: str = "config/self_healing_config.yaml"):
+        super().__init__()
+        self.alerts = []
+        logger.info("Experta Rules engine initialized. Add your rules as @Rule methods.")
+
+    def reset(self):
+        """Reset the engine state"""
+        super().reset()
+        self.alerts = []
+
+    def run(self, steps=None):
+        """Run the rules engine"""
         try:
-            # Convert patient data to facts
-            facts = self._prepare_facts(patient_data)
-            
-            # Evaluate rules
-            results = self.engine.evaluate(facts)
-            
-            # Process results
-            for result in results:
-                if result.get("alert"):
-                    match = RuleMatch(
-                        patient_id=patient_data["id"],
-                        rule_id=result["rule_id"],
-                        confidence_score=self._calculate_confidence(result),
-                        explanation=self._generate_explanation(result),
-                        details=result
-                    )
-                    matches.append(match)
-            
-            return matches
-            
+            super().run(steps)
+        except Exception as e:
+            logger.error(f"Error running rules engine: {str(e)}")
+            return []
+
+    # The evaluate method now uses experta's declare and run methods
+    def evaluate(self, facts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        try:
+            # Reset engine state
+            self.reset()
+
+            # Declare facts
+            for fact in facts:
+                if "systolic" in fact:
+                    self.declare(BloodPressureFact(**fact))
+                elif "name" in fact and "dosage" in fact:
+                    self.declare(MedicationFact(**fact))
+                elif "name" in fact and "status" in fact:
+                    self.declare(ConditionFact(**fact))
+
+            # Run rules
+            self.run()
+
+            return self.alerts
         except Exception as e:
             logger.error(f"Error evaluating rules: {str(e)}")
-            raise
+            return []
 
-    def calculate_clinical_score(self, score_type: str, patient_data: Dict[str, Any]) -> ClinicalScore:
-        """Calculate clinical scores (CHA₂DS₂-VASc, Wells, etc.)"""
-        try:
-            if score_type == "CHA2DS2-VASc":
-                score = self._calculate_chads_vasc(patient_data)
-            elif score_type == "Wells":
-                score = self._calculate_wells_score(patient_data)
-            else:
-                raise ValueError(f"Unknown score type: {score_type}")
-            
-            return ClinicalScore(
-                patient_id=patient_data["id"],
-                score_type=score_type,
-                score_value=score["total"],
-                interpretation=score["interpretation"],
-                details=score["details"]
-            )
-            
-        except Exception as e:
-            logger.error(f"Error calculating clinical score: {str(e)}")
-            raise
+    @Rule(
+        BloodPressureFact(systolic=P(lambda x: x > 140)),
+        BloodPressureFact(systolic=P(lambda x: x > 140)),
+        BloodPressureFact(systolic=P(lambda x: x > 140))
+    )
+    def high_blood_pressure_rule(self):
+        """Rule for detecting consistently high blood pressure"""
+        self.alerts.append({
+            "type": "blood_pressure",
+            "severity": "high",
+            "message": "Patient has shown consistently high blood pressure readings",
+            "recommendations": [
+                "Consider immediate blood pressure medication adjustment",
+                "Schedule follow-up appointment",
+                "Monitor for symptoms of hypertensive crisis"
+            ]
+        })
 
-    def _calculate_chads_vasc(self, patient_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Calculate CHA₂DS₂-VASc score"""
-        score = 0
-        details = {}
-        
-        # Age
-        if patient_data.get("age", 0) >= 75:
-            score += 2
-            details["age"] = 2
-        elif patient_data.get("age", 0) >= 65:
-            score += 1
-            details["age"] = 1
-            
-        # Sex
-        if patient_data.get("sex") == "F":
-            score += 1
-            details["sex"] = 1
-            
-        # Other factors
-        if patient_data.get("congestive_heart_failure"):
-            score += 1
-            details["chf"] = 1
-        if patient_data.get("hypertension"):
-            score += 1
-            details["hypertension"] = 1
-        if patient_data.get("diabetes"):
-            score += 1
-            details["diabetes"] = 1
-        if patient_data.get("stroke_tia"):
-            score += 2
-            details["stroke_tia"] = 2
-        if patient_data.get("vascular_disease"):
-            score += 1
-            details["vascular_disease"] = 1
-            
-        # Interpretation
-        interpretation = self._interpret_chads_vasc(score)
-        
-        return {
-            "total": score,
-            "details": details,
-            "interpretation": interpretation
-        }
+    @Rule(
+        MedicationFact(name="lisinopril"),
+        BloodPressureFact(systolic=P(lambda x: x > 160))
+    )
+    def medication_adjustment_rule(self):
+        """Rule for detecting need for medication adjustment"""
+        self.alerts.append({
+            "type": "medication",
+            "severity": "high",
+            "message": "Blood pressure remains high despite current medication",
+            "recommendations": [
+                "Consider increasing lisinopril dosage",
+                "Evaluate for additional antihypertensive medications",
+                "Check for medication adherence"
+            ]
+        })
 
-    def _calculate_wells_score(self, patient_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Calculate Wells Score for DVT"""
-        score = 0
-        details = {}
-        
-        # Clinical symptoms
-        if patient_data.get("active_cancer"):
-            score += 1
-            details["active_cancer"] = 1
-        if patient_data.get("paralysis"):
-            score += 1
-            details["paralysis"] = 1
-        if patient_data.get("recent_immobilization"):
-            score += 1
-            details["recent_immobilization"] = 1
-        if patient_data.get("localized_tenderness"):
-            score += 1
-            details["localized_tenderness"] = 1
-        if patient_data.get("entire_leg_swollen"):
-            score += 1
-            details["entire_leg_swollen"] = 1
-        if patient_data.get("calf_swelling"):
-            score += 1
-            details["calf_swelling"] = 1
-        if patient_data.get("pitting_edema"):
-            score += 1
-            details["pitting_edema"] = 1
-        if patient_data.get("collateral_superficial_veins"):
-            score += 1
-            details["collateral_superficial_veins"] = 1
-        if patient_data.get("alternative_diagnosis"):
-            score -= 2
-            details["alternative_diagnosis"] = -2
-            
-        # Interpretation
-        interpretation = self._interpret_wells_score(score)
-        
-        return {
-            "total": score,
-            "details": details,
-            "interpretation": interpretation
-        }
+    @Rule(
+        ConditionFact(name="hypertension"),
+        BloodPressureFact(systolic=P(lambda x: x > 180))
+    )
+    def hypertensive_crisis_rule(self):
+        """Rule for detecting hypertensive crisis"""
+        self.alerts.append({
+            "type": "crisis",
+            "severity": "critical",
+            "message": "Potential hypertensive crisis detected",
+            "recommendations": [
+                "Immediate medical attention required",
+                "Consider emergency department visit",
+                "Monitor for symptoms of end-organ damage"
+            ]
+        })
 
-    def _interpret_chads_vasc(self, score: int) -> str:
-        """Interpret CHA₂DS₂-VASc score"""
-        if score == 0:
-            return "Low risk - No antithrombotic therapy recommended"
-        elif score == 1:
-            return "Low risk - Consider antithrombotic therapy"
-        else:
-            return "High risk - Anticoagulation recommended"
+    def get_alerts(self) -> List[Dict[str, Any]]:
+        """Get current alerts"""
+        return self.alerts
 
-    def _interpret_wells_score(self, score: int) -> str:
-        """Interpret Wells Score"""
-        if score < 2:
-            return "Low probability of DVT"
-        elif score < 6:
-            return "Moderate probability of DVT"
-        else:
-            return "High probability of DVT"
+    # The add_rule and remove_rule methods are not applicable in experta's typical use case
+    # where rules are defined as methods.
+    # If dynamic rule management is critical, a different approach would be needed with experta,
+    # potentially involving modifying the KnowledgeEngine class definition at runtime, which is complex.
+    # Leaving placeholder methods or removing them based on necessity.
+    # def add_rule(self, rule: Dict[str, Any]):
+    #     logger.warning("add_rule is not directly supported in this experta implementation.")
+    #     pass
 
-    def _prepare_facts(self, patient_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Convert patient data to facts for rule engine"""
-        return {
-            "patient": patient_data,
-            "timestamp": datetime.utcnow().isoformat()
-        }
-
-    def _calculate_confidence(self, result: Dict[str, Any]) -> float:
-        """Calculate confidence score for a rule match"""
-        # In a real system, this would consider multiple factors
-        return 0.95  # Example confidence score
-
-    def _generate_explanation(self, result: Dict[str, Any]) -> str:
-        """Generate human-readable explanation for a rule match"""
-        rule = next((r for r in self.rules if r["id"] == result["rule_id"]), None)
-        if rule:
-            return f"According to {rule['guideline']} section {rule['section']}, {result['alert']}"
-        return result["alert"] 
+    # def remove_rule(self, rule_id: str):
+    #     logger.warning("remove_rule is not directly supported in this experta implementation.")
+    #     pass

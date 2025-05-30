@@ -12,6 +12,12 @@ from ..config import settings
 
 logger = logging.getLogger(__name__)
 
+# Module-level Prometheus metrics (singletons)
+self_healing_errors_total = Counter('self_healing_errors_total', 'Total number of errors handled', ['error_type', 'severity'])
+self_healing_recoveries_total = Counter('self_healing_recoveries_total', 'Total number of recovery attempts', ['success'])
+self_healing_recovery_duration_seconds = Histogram('self_healing_recovery_duration_seconds', 'Time taken for recovery operations', ['strategy'])
+self_healing_system_health = Gauge('self_healing_system_health', 'System health metrics', ['metric'])
+
 class HealthMonitor:
     """Advanced health monitoring system"""
     
@@ -26,28 +32,11 @@ class HealthMonitor:
         self.is_running = False
         self.metrics_history = []
         self.max_history_size = 1000
-        
-        # Prometheus metrics
-        self.error_counter = Counter(
-            'self_healing_errors_total',
-            'Total number of errors handled',
-            ['error_type', 'severity']
-        )
-        self.recovery_counter = Counter(
-            'self_healing_recoveries_total',
-            'Total number of recovery attempts',
-            ['success']
-        )
-        self.recovery_time = Histogram(
-            'self_healing_recovery_duration_seconds',
-            'Time taken for recovery operations',
-            ['strategy']
-        )
-        self.system_health = Gauge(
-            'self_healing_system_health',
-            'System health metrics',
-            ['metric']
-        )
+        # Use module-level metrics
+        self.error_counter = self_healing_errors_total
+        self.recovery_counter = self_healing_recoveries_total
+        self.recovery_time = self_healing_recovery_duration_seconds
+        self.system_health = self_healing_system_health
         
     async def start(self):
         """Start health monitoring"""

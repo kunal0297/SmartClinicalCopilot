@@ -5,7 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any
 import json
-from .config import settings
+from backend.config import settings
 
 class CustomJSONFormatter(logging.Formatter):
     """Custom JSON formatter for structured logging"""

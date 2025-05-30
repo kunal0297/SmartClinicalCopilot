@@ -9,7 +9,7 @@
 [![Docker](https://img.shields.io/badge/Docker-20.10+-2496ED.svg)](https://www.docker.com)
 [![FHIR](https://img.shields.io/badge/FHIR-R4-2A2A2A.svg)](https://www.hl7.org/fhir)
 
-A comprehensive clinical decision support system that integrates with FHIR and IRIS for Healthcare to provide real-time clinical guidance and alerts.
+An AI-powered clinical decision support system that helps healthcare providers make better decisions by providing real-time clinical insights and recommendations.
 
 [Features](#features) • [Architecture](#architecture) • [Quick Start](#quick-start) • [Development](#development) • [Contributing](#contributing)
 
@@ -86,6 +86,8 @@ graph TD
 - Git
 - Node.js (for local development)
 - Python 3.9+ (for local development)
+- PostgreSQL (for production)
+- Redis (for caching and session management)
 
 ### Installation
 
@@ -95,12 +97,47 @@ graph TD
    cd SmartClinicalCopilot
    ```
 
-2. **Start the services:**
-   ```bash
-   docker-compose up -d
+2. **Create a `.env` file in the backend directory with the following content:**
+   ```env
+   # Environment
+   ENVIRONMENT=development
+
+   # API Settings
+   HOST=0.0.0.0
+   PORT=8000
+
+   # Database
+   DATABASE_URL=postgresql://postgres:postgres@db:5432/clinical_copilot
+
+   # FHIR Server
+   FHIR_SERVER_URL=http://hapi.fhir.org/baseR4
+
+   # LLM Settings
+   LLM_API_KEY=your-api-key-here
+   LLM_MODEL=mistral
+
+   # Redis Settings
+   REDIS_URL=redis://redis:6379/0
+
+   # Security
+   SECRET_KEY=your-secret-key-here
+   ACCESS_TOKEN_EXPIRE_MINUTES=11520  # 8 days
+
+   # Monitoring
+   ENABLE_METRICS=true
+   METRICS_PORT=9090
+
+   # Logging
+   LOG_LEVEL=INFO
    ```
 
-3. **Access the services:**
+3. **Build and start the Docker containers:**
+   ```bash
+   docker-compose build
+   docker-compose up
+   ```
+
+4. **Access the services:**
    - Frontend: [http://localhost:3000](http://localhost:3000)
    - Backend API: [http://localhost:8000](http://localhost:8000)
    - FHIR Server: [http://localhost:8080](http://localhost:8080)
@@ -125,7 +162,8 @@ graph TD
 
 3. **Run the development server:**
    ```bash
-   uvicorn app:app --reload
+   cd backend
+   uvicorn main:app --reload
    ```
 
 ### Frontend Development

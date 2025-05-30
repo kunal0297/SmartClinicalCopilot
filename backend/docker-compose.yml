@@ -8,24 +8,40 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=8000
-      - FHIR_BASE_URL=http://hapi.fhir.org/baseR4
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - USE_LOCAL_LLM=${USE_LOCAL_LLM:-true}
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-mistral}
-      - OLLAMA_BASE_URL=http://ollama:11434
-      - ADDITIONAL_OLLAMA_INSTANCES=http://ollama2:11434,http://ollama3:11434
-      - DEBUG=False
+      - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/clinical_copilot
+      - FHIR_SERVER_URL=http://hapi.fhir.org/baseR4
+      - LLM_API_KEY=${OPENAI_API_KEY}
+      - LLM_MODEL=${OLLAMA_MODEL:-mistral}
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
       - LOG_LEVEL=INFO
+      - ENABLE_METRICS=true
+      - METRICS_PORT=9090
     volumes:
       - ./rules:/app/rules
       - ./encrypted_metrics:/app/encrypted_metrics
       - ./benchmarks:/app/benchmarks
     depends_on:
+      - redis
       - ollama
       - ollama2
       - ollama3
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -96,4 +112,5 @@ volumes:
   grafana-storage:
   ollama_data:
   ollama2_data:
-  ollama3_data: 
+  ollama3_data:
+  redis_data: 

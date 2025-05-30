@@ -1,0 +1,80 @@
+[
+  {
+    "id": "demo-1",
+    "name": [
+      {
+        "given": ["John"],
+        "family": "Doe"
+      }
+    ],
+    "gender": "male",
+    "birthDate": "1980-01-01",
+    "conditions": [
+      {
+        "code": "E11.9",
+        "display": "Type 2 diabetes mellitus without complications",
+        "status": "active"
+      }
+    ],
+    "observations": [
+      {
+        "code": "2339-0",
+        "display": "Glucose [Mass/volume] in Blood",
+        "value": 180,
+        "unit": "mg/dL"
+      }
+    ]
+  },
+  {
+    "id": "demo-2",
+    "name": [
+      {
+        "given": ["Jane"],
+        "family": "Smith"
+      }
+    ],
+    "gender": "female",
+    "birthDate": "1975-05-15",
+    "conditions": [
+      {
+        "code": "I10",
+        "display": "Essential (primary) hypertension",
+        "status": "active"
+      }
+    ],
+    "observations": [
+      {
+        "code": "55284-4",
+        "display": "Blood pressure systolic and diastolic",
+        "value": 145,
+        "unit": "mmHg"
+      }
+    ]
+  },
+  {
+    "id": "demo-3",
+    "name": [
+      {
+        "given": ["Robert"],
+        "family": "Johnson"
+      }
+    ],
+    "gender": "male",
+    "birthDate": "1990-12-20",
+    "conditions": [
+      {
+        "code": "J45.909",
+        "display": "Asthma, unspecified, uncomplicated",
+        "status": "active"
+      }
+    ],
+    "observations": [
+      {
+        "code": "2018-8",
+        "display": "FEV1/FVC ratio",
+        "value": 0.65,
+        "unit": "ratio"
+      }
+    ]
+  }
+] 

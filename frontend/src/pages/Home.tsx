@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { Patient } from '../api';
 import { Vortex } from '../components/ui/vortex';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 // Remove unused imports
 // import Typography from '@mui/material/Typography';
@@ -19,24 +20,8 @@ const Home = () => {
       setLoading(true);
       setError(null);
       try {
-        // Assuming your backend serves demo patients at /api/demo-patients
-        const response = await fetch('/api/demo-patients');
-        if (!response.ok) {
-          // Attempt to read the error body
-          let errorDetail = 'Failed to fetch demo patients';
-          try {
-            const errorBody = await response.json();
-            if (errorBody && errorBody.detail) {
-              errorDetail = `Failed to fetch demo patients: ${errorBody.detail}`;
-            }
-          } catch (jsonError) {
-             // If parsing JSON fails, use a generic message or the status text
-             errorDetail = `Failed to fetch demo patients (Status: ${response.status} ${response.statusText})`;
-             console.error("Failed to parse error response body", jsonError);
-          }
-           throw new Error(errorDetail);
-        }
-        const data: Patient[] = await response.json();
+        const response = await axios.get('http://localhost:8000/demo-patients');
+        const data: Patient[] = response.data;
         // Filter out patients with id not starting with "demo-"
         const demoData = data.filter(patient => patient.id.startsWith('demo-'));
         setPatients(demoData);

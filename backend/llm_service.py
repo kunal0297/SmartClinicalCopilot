@@ -9,6 +9,7 @@ from .models import RuleMatch
 from .metrics.metrics_manager import MetricsManager
 from .cache_manager import CacheManager
 from .iris_client import IRISClient  # New import for IRIS integration
+from .llm_explainer import LLMExplainer  # Add import for LLMExplainer
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ class LLMService:
         self.metrics_manager = MetricsManager()
         self.cache_manager = CacheManager()
         self.iris_client = IRISClient()  # Initialize IRIS client
+        self.llm_explainer = LLMExplainer()  # Initialize LLMExplainer
         self.model_configs = self._load_model_configs()
         
         if self.use_local_model:

@@ -4,7 +4,6 @@ import json
 import os
 import sys
 import subprocess
-import docker
 import requests
 import yaml
 from typing import Dict, Any, Optional, List, Tuple
@@ -13,7 +12,6 @@ from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
-import redis
 from .config import settings
 from .llm_service import LLMService
 from .logging_config import LogContext
@@ -25,13 +23,7 @@ logger = logging.getLogger(__name__)
 
 class ErrorHandler:
     def __init__(self):
-        self.redis_client = redis.Redis(
-            host=settings.REDIS_HOST,
-            port=settings.REDIS_PORT,
-            db=0,
-            decode_responses=True
-        )
-        self.docker_client = docker.from_env()
+        self.redis_client = settings.redis_client
         self.llm_service = LLMService()
         self.recovery_strategies = RecoveryStrategies()
         self.error_patterns = self._load_error_patterns()
@@ -40,17 +32,20 @@ class ErrorHandler:
 
     def _initialize_metrics(self):
         """Initialize error metrics in Redis"""
-        metrics = {
-            "total_errors": 0,
-            "recovery_attempts": 0,
-            "successful_recoveries": 0,
-            "failed_recoveries": 0,
-            "last_error_time": None,
-            "error_types": {},
-            "recovery_success_rate": 0,
-            "system_health": {}
-        }
-        self.redis_client.hmset("error_metrics", metrics)
+        try:
+            metrics = {
+                "total_errors": 0,
+                "recovery_attempts": 0,
+                "successful_recoveries": 0,
+                "failed_recoveries": 0,
+                "last_error_time": None,
+                "error_types": {},
+                "recovery_success_rate": 0,
+                "system_health": {}
+            }
+            self.redis_client.hmset("error_metrics", metrics)
+        except Exception as e:
+            logger.warning(f"Failed to initialize Redis metrics: {str(e)}")
 
     def _setup_logging(self):
         """Setup enhanced logging configuration"""
@@ -210,7 +205,7 @@ class ErrorHandler:
             self._update_system_health_metrics()
             
         except Exception as e:
-            logger.error("Error storing metrics", exc_info=True)
+            logger.warning(f"Failed to store error metrics: {str(e)}")
 
     async def _attempt_recovery_with_retries(
         self,
@@ -294,39 +289,36 @@ class ErrorHandler:
         exc: Exception,
         context: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """Execute recovery strategy based on error type"""
+        """Execute the specified recovery strategy"""
         try:
             if strategy == "restart_service":
-                return await self.recovery_strategies.restart_service(
-                    context.get("service_name", "api")
+                # Instead of using Docker, use process management
+                return await self.recovery_strategies.restart_process(
+                    context.get("service_name")
                 )
             elif strategy == "reconnect_db":
-                return await self.recovery_strategies.reconnect_db()
+                return await self.recovery_strategies.reconnect_database()
             elif strategy == "cleanup_memory":
                 return await self.recovery_strategies.cleanup_memory()
             elif strategy == "reload_config":
-                return await self.recovery_strategies.reload_config()
-            elif strategy == "check_permissions":
-                return await self.recovery_strategies.check_permissions(
-                    context.get("resource")
-                )
-            elif strategy == "block_and_alert":
-                return await self.recovery_strategies.block_and_alert(context)
-            elif strategy == "retry_with_backoff":
-                return await self.recovery_strategies.retry_with_backoff(
-                    context.get("operation")
-                )
-            elif strategy == "validate_and_retry":
-                return await self.recovery_strategies.validate_and_retry(
-                    context.get("data"),
-                    context.get("validator")
+                return await self.recovery_strategies.reload_configuration()
+            elif strategy == "retry_operation":
+                return await self.recovery_strategies.retry_operation(
+                    context.get("operation"),
+                    context.get("max_retries", 3),
+                    context.get("retry_delay", 1)
                 )
             else:
-                return {"success": False, "reason": "Unknown recovery strategy"}
-                
+                return {
+                    "success": False,
+                    "reason": f"Unknown or unsupported recovery strategy: {strategy}"
+                }
         except Exception as e:
-            logger.error(f"Error executing recovery strategy {strategy}", exc_info=True)
-            return {"success": False, "reason": str(e)}
+            logger.error(f"Error executing recovery strategy: {str(e)}")
+            return {
+                "success": False,
+                "reason": f"Recovery strategy execution failed: {str(e)}"
+            }
 
     def _generate_error_response(
         self,
@@ -418,7 +410,7 @@ class ErrorHandler:
             )
             
         except Exception as e:
-            logger.error("Error updating system health metrics", exc_info=True)
+            logger.warning(f"Failed to update system health metrics: {str(e)}")
 
     def get_error_metrics(self) -> Dict[str, Any]:
         """Get enhanced error metrics for monitoring"""
@@ -461,5 +453,5 @@ class ErrorHandler:
             return metrics
             
         except Exception as e:
-            logger.error("Error getting metrics", exc_info=True)
+            logger.warning(f"Failed to get error metrics: {str(e)}")
             return {} 

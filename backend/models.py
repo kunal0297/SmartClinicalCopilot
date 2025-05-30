@@ -2,7 +2,7 @@ from pydantic import BaseModel, validator, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 from enum import Enum
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, JSON, Boolean
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, JSON, Boolean, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -14,6 +14,87 @@ class SeverityLevel(str, Enum):
     ERROR = "error"
     CRITICAL = "critical"
 
+# SQLAlchemy Models
+class ClinicalRule(Base):
+    __tablename__ = "clinical_rules"
+
+    id = Column(Integer, primary_key=True)
+    text = Column(Text, nullable=False)
+    category = Column(String, nullable=False)
+    severity = Column(String, nullable=False)
+    confidence = Column(Float, default=1.0)
+    conditions = Column(JSON)
+    actions = Column(JSON)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    alerts = relationship("Alert", back_populates="rule")
+    rule_matches = relationship("RuleMatch", back_populates="rule")
+    alert_metrics = relationship("AlertMetrics", back_populates="rule")
+
+class Alert(Base):
+    __tablename__ = "alerts"
+
+    id = Column(Integer, primary_key=True)
+    patient_id = Column(String, nullable=False)
+    rule_id = Column(Integer, ForeignKey("clinical_rules.id"))
+    triggered_at = Column(DateTime, default=datetime.utcnow)
+    status = Column(String)  # e.g., "active", "overridden", "resolved"
+    details = Column(JSON)
+    
+    rule = relationship("ClinicalRule", back_populates="alerts")
+    overrides = relationship("AlertOverride", back_populates="alert")
+
+class AlertOverride(Base):
+    __tablename__ = "alert_overrides"
+
+    id = Column(Integer, primary_key=True)
+    alert_id = Column(Integer, ForeignKey("alerts.id"))
+    override_reason = Column(String)
+    overridden_by = Column(String)  # User ID
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    
+    alert = relationship("Alert", back_populates="overrides")
+
+class ClinicalScore(Base):
+    __tablename__ = "clinical_scores"
+
+    id = Column(Integer, primary_key=True)
+    patient_id = Column(String, nullable=False)
+    score_type = Column(String)  # e.g., "CHA2DS2-VASc", "Wells"
+    score_value = Column(Float)
+    calculated_at = Column(DateTime, default=datetime.utcnow)
+    interpretation = Column(String)
+    details = Column(JSON)
+
+class RuleMatch(Base):
+    __tablename__ = "rule_matches"
+
+    id = Column(Integer, primary_key=True)
+    patient_id = Column(String, nullable=False)
+    rule_id = Column(Integer, ForeignKey("clinical_rules.id"))
+    matched_at = Column(DateTime, default=datetime.utcnow)
+    confidence_score = Column(Float)
+    explanation = Column(String)
+    details = Column(JSON)
+    
+    rule = relationship("ClinicalRule", back_populates="rule_matches")
+
+class AlertMetrics(Base):
+    __tablename__ = "alert_metrics"
+
+    id = Column(Integer, primary_key=True)
+    patient_id = Column(String, nullable=False)
+    rule_id = Column(Integer, ForeignKey("clinical_rules.id"))
+    alert_count = Column(Integer, default=0)
+    override_count = Column(Integer, default=0)
+    last_alert_at = Column(DateTime)
+    last_override_at = Column(DateTime)
+    
+    rule = relationship("ClinicalRule", back_populates="alert_metrics")
+
+# Pydantic Models
 class Name(BaseModel):
     text: str
 
@@ -55,67 +136,6 @@ class Patient(BaseModel):
     class Config:
         validate_assignment = True
 
-class Alert(Base):
-    __tablename__ = "alerts"
-
-    id = Column(Integer, primary_key=True)
-    patient_id = Column(String, nullable=False)
-    rule_id = Column(Integer, ForeignKey("clinical_rules.id"))
-    triggered_at = Column(DateTime, default=datetime.utcnow)
-    status = Column(String)  # e.g., "active", "overridden", "resolved"
-    details = Column(JSON)
-    
-    rule = relationship("ClinicalRule")
-    overrides = relationship("AlertOverride", back_populates="alert")
-
-class AlertOverride(Base):
-    __tablename__ = "alert_overrides"
-
-    id = Column(Integer, primary_key=True)
-    alert_id = Column(Integer, ForeignKey("alerts.id"))
-    override_reason = Column(String)
-    overridden_by = Column(String)  # User ID
-    timestamp = Column(DateTime, default=datetime.utcnow)
-    
-    alert = relationship("Alert", back_populates="overrides")
-
-class ClinicalScore(Base):
-    __tablename__ = "clinical_scores"
-
-    id = Column(Integer, primary_key=True)
-    patient_id = Column(String, nullable=False)
-    score_type = Column(String)  # e.g., "CHA2DS2-VASc", "Wells"
-    score_value = Column(Float)
-    calculated_at = Column(DateTime, default=datetime.utcnow)
-    interpretation = Column(String)
-    details = Column(JSON)
-
-class RuleMatch(Base):
-    __tablename__ = "rule_matches"
-
-    id = Column(Integer, primary_key=True)
-    patient_id = Column(String, nullable=False)
-    rule_id = Column(Integer, ForeignKey("clinical_rules.id"))
-    matched_at = Column(DateTime, default=datetime.utcnow)
-    confidence_score = Column(Float)
-    explanation = Column(String)
-    details = Column(JSON)
-    
-    rule = relationship("ClinicalRule")
-
-class AlertMetrics(Base):
-    __tablename__ = "alert_metrics"
-
-    id = Column(Integer, primary_key=True)
-    patient_id = Column(String, nullable=False)
-    rule_id = Column(Integer, ForeignKey("clinical_rules.id"))
-    alert_count = Column(Integer, default=0)
-    override_count = Column(Integer, default=0)
-    last_alert_at = Column(DateTime)
-    last_override_at = Column(DateTime)
-    
-    rule = relationship("ClinicalRule")
-
 class RuleCondition(BaseModel):
     type: str
     code: str
@@ -129,7 +149,7 @@ class RuleAction(BaseModel):
     severity: SeverityLevel
     explanation: Optional[Dict[str, Any]] = None
 
-class ClinicalRule(BaseModel):
+class ClinicalRuleSchema(BaseModel):
     id: str
     text: str
     category: str
@@ -163,7 +183,7 @@ class SHAPExplanation(BaseModel):
     feature_names: List[str]
     feature_importance: List[Dict[str, Any]]
 
-class Alert(BaseModel):
+class AlertSchema(BaseModel):
     rule_id: str
     message: str
     severity: SeverityLevel

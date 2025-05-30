@@ -16,6 +16,15 @@ from .metrics import (
 
 logger = logging.getLogger(__name__)
 
+# Module-level Prometheus metrics (singletons)
+system_cpu_usage = prometheus_client.Gauge('system_cpu_usage', 'CPU usage percentage')
+system_memory_usage = prometheus_client.Gauge('system_memory_usage', 'Memory usage percentage')
+system_disk_usage = prometheus_client.Gauge('system_disk_usage', 'Disk usage percentage')
+system_network_io = prometheus_client.Gauge('system_network_io', 'Network I/O bytes', ['direction'])
+system_process_count = prometheus_client.Gauge('system_process_count', 'Number of running processes')
+system_uptime = prometheus_client.Gauge('system_uptime', 'System uptime in seconds')
+system_load_average = prometheus_client.Gauge('system_load_average', 'System load average', ['interval'])
+
 @dataclass
 class SystemStatus:
     """System status data class"""
@@ -32,37 +41,14 @@ class SystemMonitor:
     """Advanced system monitoring with Prometheus metrics"""
     
     def __init__(self):
-        # Initialize Prometheus metrics
-        self.cpu_usage = prometheus_client.Gauge(
-            'system_cpu_usage',
-            'CPU usage percentage'
-        )
-        self.memory_usage = prometheus_client.Gauge(
-            'system_memory_usage',
-            'Memory usage percentage'
-        )
-        self.disk_usage = prometheus_client.Gauge(
-            'system_disk_usage',
-            'Disk usage percentage'
-        )
-        self.network_io = prometheus_client.Gauge(
-            'system_network_io',
-            'Network I/O bytes',
-            ['direction']
-        )
-        self.process_count = prometheus_client.Gauge(
-            'system_process_count',
-            'Number of running processes'
-        )
-        self.uptime = prometheus_client.Gauge(
-            'system_uptime',
-            'System uptime in seconds'
-        )
-        self.load_average = prometheus_client.Gauge(
-            'system_load_average',
-            'System load average',
-            ['interval']
-        )
+        # Use module-level metrics
+        self.cpu_usage = system_cpu_usage
+        self.memory_usage = system_memory_usage
+        self.disk_usage = system_disk_usage
+        self.network_io = system_network_io
+        self.process_count = system_process_count
+        self.uptime = system_uptime
+        self.load_average = system_load_average
         
         # Initialize metrics storage
         self.metrics_history: List[SystemStatus] = []
