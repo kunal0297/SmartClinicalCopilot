@@ -18,6 +18,7 @@ export default {
           700: '#0369a1',
           800: '#075985',
           900: '#0c4a6e',
+          950: '#082f49',
         },
         secondary: {
           50: '#f8fafc',
@@ -38,4 +39,5 @@ export default {
     },
   },
   plugins: [],
+  darkMode: 'class',
 } 
