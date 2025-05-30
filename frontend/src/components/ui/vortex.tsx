@@ -1,5 +1,5 @@
 // Remove unused imports and variables
-import { cn } from "../../../lib/utils";
+import { cn } from "@/lib/utils";
 
 // Remove unused constants
 const HALF_PI = Math.PI / 2;
@@ -112,19 +112,25 @@ export const Vortex = (props: VortexProps) => {
   };
 
   const draw = (canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
-    tick++;
+    try {
+      tick++;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    drawParticles(ctx);
-    drawVortex(ctx, tick);
-    renderGlow(canvas, ctx);
-    renderToScreen(canvas, ctx);
+      drawParticles(ctx);
+      drawVortex(ctx, tick);
+      renderGlow(canvas, ctx);
+      renderToScreen(canvas, ctx);
 
-    window.requestAnimationFrame(() => draw(canvas, ctx));
+      window.requestAnimationFrame(() => draw(canvas, ctx));
+    } catch (error) {
+      console.error("Error in Vortex animation draw loop:", error);
+      // Optionally, attempt to restart or handle the error
+      // window.requestAnimationFrame(() => draw(canvas, ctx)); // Could cause infinite loop if error persists
+    }
   };
 
   const drawParticles = (ctx: CanvasRenderingContext2D) => {
