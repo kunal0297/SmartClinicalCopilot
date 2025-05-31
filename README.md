@@ -221,6 +221,71 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Email: kunalpandey0297@gmail.com
 - GitHub: [@kunal0297](https://github.com/kunal0297)
 
+## 🛠️ Post-Clone Frontend Setup (Important!)
+
+After cloning the repository, you must set up the frontend dependencies to avoid common TypeScript and module errors:
+
+1. **Install Frontend Dependencies**
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+2. **Ensure TypeScript Type Definitions**
+   If you encounter errors about missing type definitions for `node` or `vite/client`, run:
+   ```bash
+   npm install --save-dev @types/node vite
+   ```
+
+3. **Check for utils.ts**
+   Make sure the file `frontend/src/lib/utils.ts` exists. If not, create it with the following content:
+   ```typescript
+   import { type ClassValue, clsx } from "clsx";
+   import { twMerge } from "tailwind-merge";
+
+   export function cn(...inputs: ClassValue[]) {
+     return twMerge(clsx(inputs));
+   }
+
+   export function formatDate(date: Date): string {
+     return new Intl.DateTimeFormat("en-US", {
+       year: "numeric",
+       month: "long",
+       day: "numeric",
+     }).format(date);
+   }
+
+   export function debounce<T extends (...args: any[]) => any>(
+     func: T,
+     wait: number
+   ): (...args: Parameters<T>) => void {
+     let timeout: NodeJS.Timeout;
+
+     return function executedFunction(...args: Parameters<T>) {
+       const later = () => {
+         clearTimeout(timeout);
+         func(...args);
+       };
+
+       clearTimeout(timeout);
+       timeout = setTimeout(later, wait);
+     };
+   }
+
+   export function generateId(): string {
+     return Math.random().toString(36).substring(2) + Date.now().toString(36);
+   }
+   ```
+
+4. **Troubleshooting**
+   - If you see errors like `Cannot find module '@/lib/utils'`, check that the file above exists and is committed.
+   - If you see TypeScript errors about missing types, repeat step 2.
+
+5. **Build the Frontend**
+   ```bash
+   npm run build
+   ```
+
 ---
 
 <div align="center">
