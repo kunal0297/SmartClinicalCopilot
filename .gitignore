@@ -22,9 +22,14 @@ wheels/
 
 # Virtual Environment
 venv/
+venv39/
+.venv/
 ENV/
 env/
 .env
+
+# TypeScript build info (generated)
+*.tsbuildinfo
 
 # IDE
 .idea/

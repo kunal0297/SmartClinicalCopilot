@@ -89,27 +89,44 @@ class TrieEngine:
         
         return node.rule_ids if node.is_end_of_word else set()
 
-    def add_rule(self, rule: Dict[str, Any]) -> None:
+    @staticmethod
+    def _to_dict(rule: Any) -> Dict[str, Any]:
+        """Normalize a rule (dict or Pydantic model) to a plain dict."""
+        if isinstance(rule, dict):
+            return rule
+        if hasattr(rule, "model_dump"):
+            return rule.model_dump()
+        if hasattr(rule, "dict"):
+            return rule.dict()
+        return {
+            "id": getattr(rule, "id", None),
+            "text": getattr(rule, "text", None),
+            "conditions": getattr(rule, "conditions", []),
+        }
+
+    def add_rule(self, rule: Any) -> None:
         """
         Add a rule to the trie engine.
-        
-        Args:
-            rule: The rule dictionary to add
+
+        Accepts either a rule dictionary or a Pydantic rule model.
         """
-        if 'id' not in rule or 'text' not in rule:
+        rule = self._to_dict(rule)
+        if not rule.get('id') or not rule.get('text'):
             logger.error("Invalid rule format: missing id or text")
             return
 
         rule_id = rule['id']
         self.rules[rule_id] = rule
-        
-        # Insert the rule text
+
+        # Insert the rule text and the rule id so both can be autocompleted
         self.insert(rule['text'], rule_id)
-        
+        self.insert(rule_id, rule_id)
+
         # Insert keywords from conditions
-        for condition in rule.get('conditions', []):
-            if 'type' in condition:
-                self.insert(condition['type'], rule_id)
+        for condition in rule.get('conditions', []) or []:
+            c_type = condition.get('type') if isinstance(condition, dict) else getattr(condition, 'type', None)
+            if c_type:
+                self.insert(str(c_type), rule_id)
 
     def remove_rule(self, rule_id: str) -> None:
         """

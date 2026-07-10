@@ -3,14 +3,16 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
 
-# Get database URL from environment variable
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/clinical_copilot"
-)
+# Get database URL from environment variable. Defaults to a local SQLite file so
+# the backend runs out of the box for local development; Docker Compose overrides
+# this with a PostgreSQL URL.
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+
+# SQLite needs a special connect arg when used with FastAPI's threaded workers.
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
 # Create SQLAlchemy engine
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
 # Create SessionLocal class
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

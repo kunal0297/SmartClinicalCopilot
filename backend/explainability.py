@@ -1,9 +1,17 @@
 import numpy as np
-import shap
 from typing import Dict, Any, List, Tuple
 import logging
-from models import RuleMatch, ClinicalRule
+from backend.models import RuleMatch, ClinicalRule
 import json
+
+# SHAP is an optional, heavy dependency. When unavailable we fall back to a
+# lightweight rule-based feature-importance calculation so explanations still work.
+try:
+    import shap
+    _SHAP_AVAILABLE = True
+except Exception:  # noqa: BLE001
+    shap = None  # type: ignore
+    _SHAP_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -76,11 +84,26 @@ class RuleExplainer:
     ) -> np.ndarray:
         # Create a simple rule-based model for SHAP
         def rule_model(x):
-            return np.array([self._evaluate_rule(x, rule)])
+            arr = np.atleast_2d(x)
+            return np.array([self._evaluate_rule(row, rule) for row in arr])
 
-        # Initialize explainer only when needed
-        explainer = shap.Explainer(rule_model, feature_names=self.feature_names)
-        return explainer.shap_values(features)
+        if _SHAP_AVAILABLE:
+            try:
+                background = np.zeros((1, len(features)))
+                explainer = shap.KernelExplainer(rule_model, background)
+                values = explainer.shap_values(features, silent=True)
+                return np.asarray(values).reshape(-1)
+            except Exception as e:  # noqa: BLE001
+                logger.warning("SHAP computation failed (%s); using perturbation fallback", e)
+
+        # Fallback: single-feature perturbation importance (no SHAP needed).
+        base = float(rule_model(features)[0])
+        importances = []
+        for i in range(len(features)):
+            perturbed = features.astype(float).copy()
+            perturbed[i] = 0.0
+            importances.append(base - float(rule_model(perturbed)[0]))
+        return np.array(importances)
 
     def _generate_visualization(
         self,

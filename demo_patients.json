@@ -3,78 +3,123 @@
     "id": "demo-1",
     "name": [
       {
-        "given": ["John"],
+        "given": [
+          "John"
+        ],
         "family": "Doe"
       }
     ],
     "gender": "male",
-    "birthDate": "1980-01-01",
-    "conditions": [
-      {
-        "code": "E11.9",
-        "display": "Type 2 diabetes mellitus without complications",
-        "status": "active"
-      }
-    ],
-    "observations": [
-      {
-        "code": "2339-0",
-        "display": "Glucose [Mass/volume] in Blood",
-        "value": 180,
-        "unit": "mg/dL"
-      }
-    ]
+    "birthDate": "1955-03-12T00:00:00",
+    "conditions": {
+      "observations": [
+        {
+          "code": "eGFR",
+          "system": "http://loinc.org",
+          "display": "Estimated Glomerular Filtration Rate",
+          "value": 24,
+          "unit": "mL/min/1.73m2"
+        },
+        {
+          "code": "2339-0",
+          "system": "http://loinc.org",
+          "display": "Glucose [Mass/volume] in Blood",
+          "value": 182,
+          "unit": "mg/dL"
+        }
+      ],
+      "medications": [
+        {
+          "code": "ibuprofen",
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "display": "Ibuprofen 400 mg oral tablet",
+          "status": "active",
+          "intent": "order"
+        }
+      ],
+      "conditions": [
+        {
+          "code": "N18.4",
+          "system": "http://hl7.org/fhir/sid/icd-10",
+          "display": "Chronic kidney disease, stage 4",
+          "status": "active"
+        }
+      ]
+    }
   },
   {
     "id": "demo-2",
     "name": [
       {
-        "given": ["Jane"],
+        "given": [
+          "Jane"
+        ],
         "family": "Smith"
       }
     ],
     "gender": "female",
-    "birthDate": "1975-05-15",
-    "conditions": [
-      {
-        "code": "I10",
-        "display": "Essential (primary) hypertension",
-        "status": "active"
-      }
-    ],
-    "observations": [
-      {
-        "code": "55284-4",
-        "display": "Blood pressure systolic and diastolic",
-        "value": 145,
-        "unit": "mmHg"
-      }
-    ]
+    "birthDate": "1968-09-30T00:00:00",
+    "conditions": {
+      "observations": [
+        {
+          "code": "QT_interval",
+          "system": "http://loinc.org",
+          "display": "QT interval",
+          "value": 482,
+          "unit": "ms"
+        }
+      ],
+      "medications": [
+        {
+          "code": "amiodarone",
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "display": "Amiodarone 200 mg oral tablet",
+          "status": "active",
+          "intent": "order"
+        }
+      ],
+      "conditions": [
+        {
+          "code": "I48.91",
+          "system": "http://hl7.org/fhir/sid/icd-10",
+          "display": "Atrial fibrillation",
+          "status": "active"
+        }
+      ]
+    }
   },
   {
     "id": "demo-3",
     "name": [
       {
-        "given": ["Robert"],
+        "given": [
+          "Robert"
+        ],
         "family": "Johnson"
       }
     ],
     "gender": "male",
-    "birthDate": "1990-12-20",
-    "conditions": [
-      {
-        "code": "J45.909",
-        "display": "Asthma, unspecified, uncomplicated",
-        "status": "active"
-      }
-    ],
-    "observations": [
-      {
-        "code": "2018-8",
-        "display": "FEV1/FVC ratio",
-        "value": 0.65,
-        "unit": "ratio"
-      }
-    ]
+    "birthDate": "1990-06-15T00:00:00",
+    "conditions": {
+      "observations": [
+        {
+          "code": "eGFR",
+          "system": "http://loinc.org",
+          "display": "Estimated Glomerular Filtration Rate",
+          "value": 95,
+          "unit": "mL/min/1.73m2"
+        }
+      ],
+      "medications": [
+        {
+          "code": "acetaminophen",
+          "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+          "display": "Acetaminophen 500 mg oral tablet",
+          "status": "active",
+          "intent": "order"
+        }
+      ],
+      "conditions": []
+    }
   }
-] 
+]

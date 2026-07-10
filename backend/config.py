@@ -75,6 +75,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Smart Clinical Copilot"
     SUPPORT_EMAIL: str = os.getenv("SUPPORT_EMAIL", "kunalpandey0297@gmail.com")
+    API_DOCS_URL: str = os.getenv("API_DOCS_URL", "/docs")
     
     # CORS Settings
     CORS_ORIGINS: List[str] = ["*"]
