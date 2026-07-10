@@ -1,10 +1,27 @@
 import os
 from typing import List, Dict, Any, Optional, Union, AsyncGenerator
 import logging
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-import torch
-import ollama
 from datetime import datetime
+
+# Heavy / optional dependencies. These are only required when running a local
+# HuggingFace or Ollama model (USE_LOCAL_LLM=true). Import lazily so the service
+# starts without them installed.
+try:
+    from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
+    import torch
+    _TRANSFORMERS_AVAILABLE = True
+except Exception:  # noqa: BLE001
+    AutoModelForCausalLM = AutoTokenizer = pipeline = None  # type: ignore
+    torch = None  # type: ignore
+    _TRANSFORMERS_AVAILABLE = False
+
+try:
+    import ollama
+    _OLLAMA_AVAILABLE = True
+except Exception:  # noqa: BLE001
+    ollama = None  # type: ignore
+    _OLLAMA_AVAILABLE = False
+
 from .models import RuleMatch
 from .metrics.metrics_manager import MetricsManager
 from .cache_manager import CacheManager
@@ -55,8 +72,14 @@ class LLMService:
     async def _initialize_local_model(self):
         """Initialize local model with better error handling and model selection"""
         try:
+            if not _TRANSFORMERS_AVAILABLE:
+                logger.warning(
+                    "transformers/torch not installed; skipping local model load. "
+                    "Install requirements-ml.txt to enable local LLM inference."
+                )
+                return
             model_name = os.getenv("LOCAL_MODEL_NAME", "mistralai/Mistral-7B-v0.1")
-            
+
             # Load tokenizer first
             self.local_tokenizer = AutoTokenizer.from_pretrained(
                 model_name,
@@ -181,10 +204,16 @@ class LLMService:
     async def _generate_openai_summary(self, prompt: str) -> str:
         """Generate summary using OpenAI API"""
         try:
-            import openai
-            
-            response = await openai.ChatCompletion.acreate(
-                model="gpt-4",
+            if not self.openai_api_key:
+                return (
+                    "AI summary unavailable: no OPENAI_API_KEY configured and local "
+                    "LLM is disabled. Set USE_LOCAL_LLM=true or provide an API key."
+                )
+            from openai import AsyncOpenAI
+
+            client = AsyncOpenAI(api_key=self.openai_api_key)
+            response = await client.chat.completions.create(
+                model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
                 messages=[
                     {"role": "system", "content": "You are a medical summarization system. Provide clear, concise, and accurate summaries of patient medical information."},
                     {"role": "user", "content": prompt}
@@ -192,9 +221,9 @@ class LLMService:
                 temperature=0.7,
                 max_tokens=1000
             )
-            
+
             return response.choices[0].message.content
-            
+
         except Exception as e:
             logger.error(f"Error with OpenAI API: {str(e)}")
             raise
@@ -244,12 +273,15 @@ class LLMService:
     async def _generate_openai_explanation(self, match: RuleMatch) -> str:
         """Generate explanation using OpenAI API"""
         try:
-            import openai
-            
             prompt = self._create_explanation_prompt(match)
-            
-            response = await openai.ChatCompletion.acreate(
-                model="gpt-4",
+
+            if not self.openai_api_key:
+                return self._get_fallback_explanation(match)["explanation"]
+            from openai import AsyncOpenAI
+
+            client = AsyncOpenAI(api_key=self.openai_api_key)
+            response = await client.chat.completions.create(
+                model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
                 messages=[
                     {"role": "system", "content": "You are a clinical decision support system explaining medical alerts. Provide clear, evidence-based explanations that are easy for healthcare providers to understand."},
                     {"role": "user", "content": prompt}
@@ -257,9 +289,9 @@ class LLMService:
                 temperature=0.7,
                 max_tokens=150
             )
-            
+
             return response.choices[0].message.content
-            
+
         except Exception as e:
             logger.error(f"Error with OpenAI API: {str(e)}")
             raise
@@ -361,3 +393,21 @@ class LLMService:
         # In a real system, this would use actual SHAP calculations
         import random
         return random.uniform(-1, 1)  # Simulated SHAP value
+
+    def _get_fallback_explanation(self, match: RuleMatch) -> Dict[str, Any]:
+        """Deterministic, template-based explanation used when no LLM is available."""
+        rule_id = getattr(match, "rule_id", "unknown")
+        confidence = getattr(match, "confidence_score", None)
+        explanation = (
+            f"Clinical rule '{rule_id}' was triggered for this patient. "
+            "This alert is based on the patient's clinical data matching the "
+            "rule's conditions. Please review the triggering findings and follow "
+            "your institution's clinical guidelines for next steps."
+        )
+        return {
+            "rule_id": rule_id,
+            "explanation": explanation,
+            "confidence": confidence,
+            "model": "template",
+            "generated_at": datetime.now().isoformat(),
+        }
