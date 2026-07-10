@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000';
+// Resolve the API base URL from the Vite environment so the same build works
+// in local development (http://localhost:8000) and in Docker/production.
+const API_BASE_URL =
+  (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,6 +14,10 @@ const api = axios.create({
 
 export interface Patient {
   id: string;
+  // FHIR-style name and demographics as returned by the backend
+  name?: Array<{ given?: string[] | string; family?: string }>;
+  gender?: string;
+  birthDate?: string;
   demographics?: {
     name?: string;
     age?: number;
@@ -83,7 +90,10 @@ export const suggestRules = async (prefix: string): Promise<string[]> => {
 };
 
 export const explainRule = async (ruleId: string, patient: Patient): Promise<string> => {
-  const response = await api.post('/explain-rule', { rule_id: ruleId, patient });
+  // The backend expects rule_id as a query parameter and the patient as the body.
+  const response = await api.post('/explain-rule', patient, {
+    params: { rule_id: ruleId },
+  });
   return response.data.explanation;
 };
 

@@ -238,50 +238,55 @@ async def match_rules(patient: SchemaPatient): # Using schema Patient
             rules = rule_loader.load_rules()
             for rule in rules:
                 try:
-                    triggered = False
-                    triggered_by = []
-                    # Defensive: support both object and dict
-                    conditions = getattr(rule, "conditions", None) or rule.get("conditions", [])
+                    conditions = getattr(rule, "conditions", None) or []
+                    if not conditions:
+                        continue
+
+                    # A rule fires only when *all* of its conditions are satisfied.
+                    all_met = True
+                    triggered_by: List[str] = []
                     for condition in conditions:
-                        c_type = getattr(condition, "type", None) or condition.get("type", None)
-                        c_code = getattr(condition, "code", None) or condition.get("code", None)
-                        if c_type == "lab":
-                            for obs in patient.conditions.observations:
-                                if obs.code == c_code:
-                                    if _check_lab_condition(obs, condition):
-                                        triggered = True
-                                        triggered_by.append(f"{obs.display}: {obs.value} {obs.unit}")
-                        elif c_type == "medication":
-                            for med in patient.conditions.medications:
-                                if med.code == c_code:
-                                    if _check_med_condition(med, condition):
-                                        triggered = True
-                                        triggered_by.append(f"{med.display}")
-                        elif c_type == "condition":
-                            for cond in patient.conditions.conditions:
-                                if cond.code == c_code:
-                                    if _check_condition(cond, condition):
-                                        triggered = True
-                                        triggered_by.append(f"{cond.display}")
-                    if triggered:
-                        # Get LLM explanation (skip if no API key)
-                        explanation = "LLM explanation not available (no API key)"
-                        shap_explanation = None
-                        feedback_stats = {} # Assuming feedback_stats is collected elsewhere or from feedback_system
+                        met, evidence = _evaluate_condition(condition, patient)
+                        if met:
+                            if evidence:
+                                triggered_by.append(evidence)
+                        else:
+                            all_met = False
+                            break
+
+                    if all_met:
+                        actions = getattr(rule, "actions", []) or []
+                        message = next(
+                            (a.message for a in actions if getattr(a, "message", None)),
+                            getattr(rule, "text", "Clinical rule triggered"),
+                        )
+                        severity = getattr(rule, "severity", None)
+                        severity = severity.value if hasattr(severity, "value") else (severity or "warning")
+
+                        # Deterministic explanation; upgraded to an LLM explanation
+                        # automatically when an API key / local model is configured.
+                        try:
+                            explanation_result = await llm_explainer.explain(
+                                getattr(rule, "id", ""), patient.model_dump()
+                            )
+                            explanation = explanation_result.get("explanation") if isinstance(
+                                explanation_result, dict
+                            ) else str(explanation_result)
+                        except Exception:  # noqa: BLE001
+                            explanation = getattr(rule, "text", "Clinical rule triggered")
+
                         alerts.append(SchemaAlert(
-                            rule_id=getattr(rule, 'id', rule.get('id', '')),
-                            message=getattr(rule.actions[0], 'message', rule.actions[0].get('message', '')),
-                            severity=getattr(rule, 'severity', rule.get('severity', 'warning')),
+                            patient_id=patient.id,
+                            rule_id=getattr(rule, "id", ""),
+                            message=message,
+                            severity=severity,
                             triggered_by=triggered_by,
-                            explanation=explanation,
-                            shap_explanation=shap_explanation,
-                            feedback_stats=feedback_stats
+                            explanation=explanation or "",
                         ))
                 except Exception as rule_error:
-                    rule_id = getattr(rule, 'id', rule.get('id', 'unknown'))
+                    rule_id = getattr(rule, "id", "unknown")
                     logger.error(f"Error processing rule {rule_id}: {rule_error}", exc_info=True)
-                    # Depending on desired behavior, you might want to add a failed alert or just log
-                    continue # Continue to the next rule
+                    continue
             return alerts
         except Exception as e:
             logger.error(f"Error matching rules: {str(e)}", exc_info=True)
@@ -444,42 +449,71 @@ async def get_demo_patients():
             detail=f"Error loading demo patients: {str(e)}"
         )
 
-# Helper functions (moved from app.py)
-def _check_lab_condition(observation: Any, condition: Dict[str, Any]) -> bool:
-    """Check if a lab observation meets a condition"""
-    # Ensure observation.value is treated as a float
-    try:
-        obs_value = float(observation.value)
-        cond_value = float(condition["value"])
-        if condition["operator"] == ">":
-            return obs_value > cond_value
-        elif condition["operator"] == "<":
-            return obs_value < cond_value
-        elif condition["operator"] == "=":
-            return obs_value == cond_value
-        # Add other operators if needed (>=, <=, !=)
-    except (ValueError, TypeError) as e:
-        logger.error(f"Error comparing lab value {observation.value} with condition {condition}: {e}", exc_info=True)
-        return False # Cannot compare if values are not numeric
+# Helper functions for rule evaluation --------------------------------------
+def _compare_numeric(actual: float, operator: str, expected: float) -> bool:
+    if operator in (">",):
+        return actual > expected
+    if operator in ("<",):
+        return actual < expected
+    if operator in (">=",):
+        return actual >= expected
+    if operator in ("<=",):
+        return actual <= expected
+    if operator in ("=", "=="):
+        return actual == expected
+    if operator in ("!=",):
+        return actual != expected
     return False
 
-def _check_med_condition(medication: Any, condition: Dict[str, Any]) -> bool:
-    """Check if a medication meets a condition"""
-    # Assuming medication.code exists and condition["value"] is a list of codes
-    med_code = getattr(medication, 'code', None)
-    if med_code and isinstance(condition.get("value"), list):
-         return med_code in condition["value"]
-    logger.warning(f"Could not check medication condition: medication code {med_code}, condition value type {type(condition.get('value'))}")
-    return False
 
-def _check_condition(condition_obj: Any, condition: Dict[str, Any]) -> bool:
-    """Check if a condition meets a condition"""
-     # Assuming condition_obj.code exists and condition["code"] is a specific code
-    obj_code = getattr(condition_obj, 'code', None)
-    if obj_code and condition.get("code") is not None:
-         return obj_code == condition["code"]
-    logger.warning(f"Could not check condition: object code {obj_code}, condition code {condition.get('code')}")
-    return False
+def _matches_membership(code: str, operator: str, value: Any) -> bool:
+    values = value if isinstance(value, (list, tuple, set)) else [value]
+    values = [str(v).lower() for v in values]
+    code = str(code).lower()
+    if operator in ("in", "contains"):
+        return code in values
+    if operator == "not_in":
+        return code not in values
+    return code in values
+
+
+def _evaluate_condition(condition: Any, patient: SchemaPatient):
+    """Evaluate a single rule condition against a patient.
+
+    Returns a ``(met, evidence)`` tuple where ``evidence`` is a human-readable
+    description of the triggering finding (or ``None``).
+    """
+    c_type = getattr(condition, "type", None)
+    operator = getattr(condition, "operator", None)
+    value = getattr(condition, "value", None)
+
+    pc = patient.conditions
+
+    # Medication membership conditions
+    if c_type == "medication":
+        for med in pc.medications:
+            candidates = [c for c in (med.code, med.display) if c]
+            if any(_matches_membership(c, operator or "in", value) for c in candidates):
+                return True, f"Medication: {med.display or med.code}"
+        return False, None
+
+    # Diagnosed-condition conditions
+    if c_type == "condition":
+        for cond in pc.conditions:
+            candidates = [c for c in (cond.code, cond.display) if c]
+            if any(_matches_membership(c, operator or "in", value) for c in candidates):
+                return True, f"Condition: {cond.display or cond.code}"
+        return False, None
+
+    # Otherwise treat the condition type as an observation code and compare values
+    for obs in pc.observations:
+        if str(obs.code).lower() == str(c_type).lower():
+            try:
+                if _compare_numeric(float(obs.value), operator, float(value)):
+                    return True, f"{obs.display or obs.code}: {obs.value} {obs.unit or ''}".strip()
+            except (ValueError, TypeError):
+                logger.warning("Could not compare observation %s with condition value %s", obs.code, value)
+    return False, None
 
 # Include the new patients router
 app.include_router(patients.router)

@@ -23,6 +23,20 @@ import { getPatient, matchRules } from '../api';
 import type { Patient, Alert as AlertType } from '../api';
 import axios from 'axios';
 
+function formatPatientName(patient: Patient): string {
+  const n = patient.name?.[0];
+  if (!n) return patient.demographics?.name || 'N/A';
+  const given = Array.isArray(n.given) ? n.given.join(' ') : (n.given || '');
+  const full = `${given} ${n.family || ''}`.trim();
+  return full || 'N/A';
+}
+
+function formatBirthDate(birthDate?: string): string {
+  if (!birthDate) return 'N/A';
+  const d = new Date(birthDate);
+  return isNaN(d.getTime()) ? birthDate : d.toLocaleDateString();
+}
+
 export default function Patients() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -186,12 +200,11 @@ export default function Patients() {
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2 }}>
                   <Box sx={{ flex: 1 }}>
-                    <Typography><strong>Name:</strong> {selectedPatient.demographics?.name || 'N/A'}</Typography>
-                    <Typography><strong>Age:</strong> {selectedPatient.demographics?.age || 'N/A'}</Typography>
+                    <Typography><strong>Name:</strong> {formatPatientName(selectedPatient)}</Typography>
+                    <Typography><strong>Birth Date:</strong> {formatBirthDate(selectedPatient.birthDate)}</Typography>
                   </Box>
                   <Box sx={{ flex: 1 }}>
-                    <Typography><strong>Gender:</strong> {selectedPatient.demographics?.gender || 'N/A'}</Typography>
-                    <Typography><strong>Birth Date:</strong> {selectedPatient.demographics?.birth_date || 'N/A'}</Typography>
+                    <Typography><strong>Gender:</strong> {selectedPatient.gender || selectedPatient.demographics?.gender || 'N/A'}</Typography>
                   </Box>
                 </Box>
 

@@ -11,25 +11,25 @@ class SeverityLevel(str, Enum):
 
 class Observation(BaseModel):
     code: str
-    system: str
-    display: str
+    system: Optional[str] = None
+    display: Optional[str] = None
     value: float
-    unit: str
+    unit: Optional[str] = None
     date: Optional[datetime] = None
 
 class Condition(BaseModel):
     code: str
-    system: str
-    display: str
-    status: str
+    system: Optional[str] = None
+    display: Optional[str] = None
+    status: Optional[str] = None
     onset: Optional[datetime] = None
 
 class Medication(BaseModel):
     code: str
-    system: str
-    display: str
-    status: str
-    intent: str
+    system: Optional[str] = None
+    display: Optional[str] = None
+    status: Optional[str] = None
+    intent: Optional[str] = None
     date: Optional[datetime] = None
 
 class PatientConditions(BaseModel):
@@ -39,10 +39,10 @@ class PatientConditions(BaseModel):
 
 class Patient(BaseModel):
     id: str
-    name: List[Dict[str, str]]
+    name: List[Dict[str, Any]] = []
     gender: Optional[str] = None
     birthDate: Optional[datetime] = None
-    conditions: PatientConditions
+    conditions: PatientConditions = Field(default_factory=PatientConditions)
 
 class RuleCondition(BaseModel):
     type: str

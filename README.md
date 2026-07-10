@@ -147,24 +147,65 @@ graph TD
 
 ### Backend Development
 
-1. **Set up the environment:**
+The backend runs **out of the box with zero configuration** — it defaults to a
+local SQLite database, an in-memory Redis mock, and deterministic
+guideline-based explanations, so **no external services are required** to run
+the demo.
+
+1. **Set up the environment (from the project root):**
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   venv\Scripts\activate     # Windows
+   python -m venv .venv
+   source .venv/bin/activate   # Linux/Mac
+   .venv\Scripts\activate      # Windows
    ```
 
 2. **Install dependencies:**
    ```bash
-   cd backend
-   pip install -r requirements.txt
+   pip install -r backend/requirements.txt
    ```
 
-3. **Run the development server:**
+3. **Run the development server (from the project root):**
    ```bash
-   cd backend
-   uvicorn main:app --reload
+   uvicorn backend.main:app --reload
    ```
+   > The application is `backend.main:app` and must be launched from the
+   > **project root** (not from inside `backend/`) because it imports the
+   > `backend` package.
+
+4. **(Optional) Configure environment variables:**
+   ```bash
+   cp backend/.env.example backend/.env   # then edit as needed
+   ```
+
+5. **(Optional) Enable AI features.** The heavy AI/ML stack (SHAP, HuggingFace
+   Transformers, PyTorch, OpenAI, Ollama) is **not** required. Install it only
+   if you want SHAP feature-importance explanations or LLM-generated
+   narratives:
+   ```bash
+   pip install -r backend/requirements-ml.txt
+   ```
+   Then set `OPENAI_API_KEY=...` (or `USE_LOCAL_LLM=true`) in `backend/.env`.
+
+Once running, explore the interactive API docs at
+[http://localhost:8000/docs](http://localhost:8000/docs), or try the core
+clinical-decision-support flow from the command line:
+
+```bash
+curl http://localhost:8000/health
+curl http://localhost:8000/demo-patients
+
+# Match the first demo patient against the clinical rules (fires the
+# "avoid NSAIDs in advanced CKD" alert):
+curl -s http://localhost:8000/demo-patients \
+  | python -c "import sys,json;print(json.dumps(json.load(sys.stdin)[0]))" \
+  | curl -s -X POST http://localhost:8000/match-rules \
+      -H 'Content-Type: application/json' -d @-
+```
+
+**Run the tests:**
+```bash
+cd backend && python -m pytest
+```
 
 ### Frontend Development
 
@@ -174,9 +215,15 @@ graph TD
    npm install
    ```
 
-2. **Run the development server:**
+2. **Run the development server** (expects the backend on `http://localhost:8000`):
    ```bash
    npm run dev
+   ```
+   The API base URL is configurable via `VITE_API_BASE_URL`.
+
+3. **Production build:**
+   ```bash
+   npm run build
    ```
 
 ## 🤝 Contributing

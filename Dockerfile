@@ -1,47 +1,41 @@
-FROM python:3.9-slim-bullseye
+FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# System dependencies:
+#  - build-essential/gcc: build the optional C trie extension & any wheels
+#  - curl: used by the Docker Compose healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
-    python3.9-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Install Python dependencies first for better layer caching.
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install docker psutil
 
 # Copy backend code as a package
 COPY backend /app/backend
 
-# Debug: List files to verify backend directory is present
-RUN ls -la /app
-RUN ls -la /app/backend
+# Copy the runtime data the app reads from the working directory
+COPY rules /app/rules
+COPY demo_patients.json /app/demo_patients.json
 
-# Create necessary directories (adjust paths if needed based on your app structure)
+# Create runtime directories
 RUN mkdir -p /app/backend/rules /app/backend/logs /app/backend/data /app/backend/cache
 
-# Build C extensions (adjust path if setup.py is in a different location)
-WORKDIR /app/backend
-RUN python setup.py build_ext --inplace
-WORKDIR /app
+# Build the optional C trie extension. The app falls back to a pure-Python
+# implementation, so a build failure here must not break the image.
+RUN cd /app/backend && (python setup.py build_ext --inplace || \
+    echo "C extension build skipped; using pure-Python trie engine.")
 
-# Expose the port
 EXPOSE 8000
 
-# Set environment variables
-ENV PYTHONPATH=/app
-ENV HOST=0.0.0.0
-ENV PORT=8000
-ENV DATABASE_URL=postgresql://postgres:postgres@db:5432/clinical_copilot
-ENV IRIS_HOST=iris
-ENV IRIS_PORT=52773
-ENV IRIS_NAMESPACE=USER
+ENV PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1 \
+    HOST=0.0.0.0 \
+    PORT=8000
 
 # Start the application
-RUN pip list
-RUN python --version
-CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"] 
+CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,7 +1,7 @@
 import os
 import yaml
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field, validator
 from enum import Enum
 
@@ -18,27 +18,30 @@ class SeverityLevel(str, Enum):
 class Condition(BaseModel):
     type: str
     operator: str
-    value: Any
-    unit: str = None
-    source: str = None
+    value: Any = None
+    unit: Optional[str] = None
+    source: Optional[str] = None
+    code: Optional[str] = None
 
     @validator('operator')
     def validate_operator(cls, v):
-        valid_operators = ['<', '>', '<=', '>=', '=', '==', '!=']
+        valid_operators = ['<', '>', '<=', '>=', '=', '==', '!=', 'in', 'not_in', 'contains']
         if v not in valid_operators:
             raise ValueError(f'Invalid operator. Must be one of {valid_operators}')
         return v
 
 class Action(BaseModel):
+    model_config = {"extra": "allow"}
+
     type: str
-    message: str
+    message: Optional[str] = None
     severity: SeverityLevel = SeverityLevel.INFO
-    explanation: Dict[str, Any] = None
+    explanation: Optional[Dict[str, Any]] = None
 
 class Rule(BaseModel):
     id: str
     text: str
-    category: str = None
+    category: Optional[str] = None
     severity: SeverityLevel = SeverityLevel.INFO
     confidence: float = Field(ge=0.0, le=1.0, default=1.0)
     conditions: List[Condition]
@@ -57,17 +60,26 @@ class RuleLoader:
                     rule_path = os.path.join(self.rules_dir, filename)
                     with open(rule_path, "r") as f:
                         # Load all documents from the YAML file
-                        for rule_data in yaml.safe_load_all(f):
-                            if rule_data is None:
+                        for doc in yaml.safe_load_all(f):
+                            if doc is None:
                                 continue
-                            try:
-                                # Validate rule structure
-                                rule = Rule(**rule_data)
-                                rules.append(rule)
-                                logger.info(f"Successfully loaded rule: {rule.id}")
-                            except Exception as e:
-                                logger.error(f"Error validating rule in {filename}: {str(e)}")
-                                continue
+                            # Support both a single rule per document and a
+                            # top-level {"rules": [...]} wrapper.
+                            if isinstance(doc, dict) and "rules" in doc and isinstance(doc["rules"], list):
+                                rule_docs = doc["rules"]
+                            elif isinstance(doc, list):
+                                rule_docs = doc
+                            else:
+                                rule_docs = [doc]
+                            for rule_data in rule_docs:
+                                try:
+                                    # Validate rule structure
+                                    rule = Rule(**rule_data)
+                                    rules.append(rule)
+                                    logger.info(f"Successfully loaded rule: {rule.id}")
+                                except Exception as e:
+                                    logger.error(f"Error validating rule in {filename}: {str(e)}")
+                                    continue
         except Exception as e:
             logger.error(f"Error loading rules: {str(e)}")
             return []

@@ -7,7 +7,7 @@ import os
 import logging
 
 from backend.database import get_db
-from backend.schemas import Patient, Condition, Observation
+from backend.schemas import Patient, Condition, Observation, Medication, PatientConditions
 from backend.fhir_client import FHIRClient
 from backend.logging_config import LogContext
 from dateutil.parser import parse as parse_date
@@ -16,7 +16,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-DEMO_PATIENTS_FILE = os.path.join(os.path.dirname(__file__), "..", "demo_patients.json")
+# Single source of truth: the project-root demo_patients.json (same file the
+# main app serves). backend/routers/ -> ../../ -> project root.
+DEMO_PATIENTS_FILE = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "demo_patients.json")
+)
 
 def load_demo_patients():
     """Load demo patients from JSON file."""
@@ -171,32 +175,39 @@ async def cohort_analytics():
     """Return basic cohort analytics (e.g., count of diabetics, hypertensives, etc.)."""
     with LogContext(endpoint="/cohort-analytics", method="GET"):
         try:
-            # Example: count patients with diabetes and hypertension
-            # This example uses fhir_client, ensure it's properly initialized/available
-            # You might need to adapt this based on your actual data source (FHIR or demo)
-            
-            # For demo patients, you'd iterate through the loaded data:
             demo_patients = load_demo_patients()
-            diabetics_count = sum(
-                any("Diabetes" in cond.get("code", "") for cond in p.get("conditions", {}).get("conditions", []))
+
+            def _conditions(patient):
+                """Return the list of condition dicts regardless of schema shape."""
+                conds = patient.get("conditions", {})
+                if isinstance(conds, dict):
+                    return conds.get("conditions", []) or []
+                if isinstance(conds, list):
+                    return conds
+                return []
+
+            def _matches(patient, *keywords):
+                for cond in _conditions(patient):
+                    text = f"{cond.get('code', '')} {cond.get('display', '')}".lower()
+                    if any(k.lower() in text for k in keywords):
+                        return True
+                return False
+
+            total = len(demo_patients)
+            diabetics_count = sum(_matches(p, "diabetes", "E11", "E10") for p in demo_patients)
+            hypertensives_count = sum(_matches(p, "hypertension", "I10") for p in demo_patients)
+            ckd_count = sum(_matches(p, "kidney", "renal", "ckd", "N18") for p in demo_patients)
+            cardiac_count = sum(
+                _matches(p, "atrial", "fibrillation", "cardiac", "arrhythmia", "I48")
                 for p in demo_patients
             )
-            hypertensives_count = sum(
-                 any("Hypertension" in cond.get("code", "") for cond in p.get("conditions", {}).get("conditions", []))
-                 for p in demo_patients
-             )
 
-            # If using FHIRClient, uncomment and adapt:
-            # diabetics = await fhir_client.search_resources("Condition", params={"code": "E11"})
-            # hypertensives = await fhir_client.search_resources("Condition", params={"code": "I10"})
-            # return {
-            #     "diabetics_count": len(diabetics),
-            #     "hypertensives_count": len(hypertensives)
-            # }
-            
             return {
+                "total_patients": total,
                 "diabetics_count": diabetics_count,
-                "hypertensives_count": hypertensives_count
+                "hypertensives_count": hypertensives_count,
+                "ckd_count": ckd_count,
+                "cardiac_count": cardiac_count,
             }
         except Exception as e:
             logger.error("Error in cohort_analytics", exc_info=True)
